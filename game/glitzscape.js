@@ -34,12 +34,16 @@ var numRows = 0;
 var numCols = 0;
 var numHexPts = 0;
 
+// player pos
+var speed = 0.005;
 var zRot = 0;
 var xPos = 0;
-var yPos = 0;
-var xLastPos = 0;
-var yLastPos = -1;
-var currentlyPressedKeys = {};
+var xDir = 0;
+var yDir = 0;
+var xNextDir = 0;
+var yNextDir = 0;
+var idxCurr = 0;
+var idxNext = 0;
 var lastTime = 0;
 
 const Deg2Rad = Math.PI / 180.0;
@@ -177,89 +181,194 @@ function mvPopMatrix()
 
 function handleKeyDown(event) 
 {
-   currentlyPressedKeys[event.keyCode] = true;
 }
 
 function handleKeyUp(event) 
 {
-   currentlyPressedKeys[event.keyCode] = false;
+   console.log(event.keyCode);
+   if (event.keyCode === 81) //q
+   {
+      var cell = hexIdToCell(idxCurr);
+      var nextCell = [cell[0]+1, cell[1]-1];
+      if (isValid(nextCell))
+      {
+         queueDir(-0.866, 0.5);
+         idxNext = hexCellToId(nextCell);    
+      }
+   }
+   if (event.keyCode === 87) //w
+   {
+      var cell = hexIdToCell(idxCurr);
+      var nextCell = [cell[0]+2, cell[1]];
+      if (isValid(nextCell))
+      {
+         queueDir(0, 1);
+         idxNext = hexCellToId(nextCell);    
+      }
+   }
+   if (event.keyCode === 69) //e
+   {
+      var cell = hexIdToCell(idxCurr);
+      var nextCell = [cell[0]+1, cell[1]+1];
+      if (isValid(nextCell))
+      {
+         queueDir(0.866, 0.5);
+         idxNext = hexCellToId(nextCell);    
+      }
+   }
+   if (event.keyCode === 65) //a
+   {
+      var cell = hexIdToCell(idxCurr);
+      var nextCell = [cell[0]-1, cell[1]-1];
+      if (isValid(nextCell))
+      {
+         queueDir(-0.866, -0.5);
+         idxNext = hexCellToId(nextCell);    
+      }
+   }
+   if (event.keyCode === 83) //s
+   {
+      var cell = hexIdToCell(idxCurr);
+      var nextCell = [cell[0]-2, cell[1]];
+      if (isValid(nextCell))
+      {
+         queueDir(0, -1);
+         idxNext = hexCellToId(nextCell);    
+      }
+   }
+   if (event.keyCode === 68) //d
+   {
+      var cell = hexIdToCell(idxCurr);
+      var nextCell = [cell[0]-1, cell[1]+1];
+      if (isValid(nextCell))
+      {
+         queueDir(0.866, -0.5);
+         idxNext = hexCellToId(nextCell);    
+      }
+   }
 }
 
-function updateZRot()
+function distanceSqr(x1, y1, x2, y2)
 {
-   var rise = yLastPos - yPos;
-   var run = xLastPos - xPos;
-   if (Math.abs(rise) > 0.0 || Math.abs(run) > 0.0)
+   var d = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2);
+   return d;
+}
+
+function updatePlayer(dt)
+{
+   xPos += dt * xDir * speed;
+   yPos += dt * yDir * speed;
+
+   if (idxNext > -1)
    {
-      zRot = Math.atan2(rise, run) / Deg2Rad + 90;
+      var target = hexCenterById(idxNext);
+      if (distanceSqr(target[0], target[1], xPos, yPos) < 0.01)
+      {
+         setHexAlphaById(idxNext, 1.0);
+
+         console.log(xPos + " " + yPos + " " + idxNext + " " + xNextDir + " " + yNextDir);
+
+         xDir = xNextDir;
+         yDir = yNextDir;
+         idxCurr = idxNext;
+         xPos = target[0];
+         yPos = target[1];
+
+         idxNext = -1; // ASN TODO: Need to set this to something valid based on xDir,yDir or else we can't stop!!!
+         xNextDir = 0;
+         yNextDir = 0;
+
+      }
+   }
+
+   if (Math.abs(yDir) > 0.0 || Math.abs(xDir) > 0.0)
+   {
+      zRot = Math.atan2(-xDir, yDir) / Deg2Rad;
+   }
+}
+
+function placePlayerInCell(idx)
+{
+   var point = hexCenterById(idx);
+   xPos = point[0];
+   yPos = point[1];
+   setHexAlphaById(idx, 0.95);
+   console.log("place player: "+xPos+" " +yPos+" id: "+idx);
+
+   xDir = 0;
+   yDir = 0;
+   idxCurr = idx;
+
+   xNextDir = 0;
+   yNextDir = 0;
+   idxNext = -1;
+}
+
+function isValid(idx)
+{
+   var cell = hexIdToCell(idx);
+   return isValid(cell);
+}
+
+function isValid(cell)
+{
+   // todo: check against generated graph
+   console.log("IS VALID "+cell+ " " + numRows + " " + numCols);
+   if (cell[0] < 0) return false;
+   if (cell[1] < 0) return false;
+
+   if (cell[0] >= numRows) return false;
+   if (cell[1] >= numCols*2) return false;
+
+   if (cell[0] % 2 === 0 && cell[1] % 2 === 0) return false;
+   if (cell[0] % 2 === 1 && cell[1] % 2 === 1) return false;
+
+   return true;
+}
+
+function queueDir(xd, yd)
+{
+   if (xDir === 0 && yDir === 0)
+   {
+      xDir = xd;
+      yDir = yd;
+      xNextDir = 0;
+      yNextDir = 0;      
    }
    else
    {
-      zRot = 0.0;
+      xNextDir = xd;
+      yNextDir = yd;
    }
 }
 
-function handleKeys() 
-{
-   /*if (currentlyPressedKeys[33]) 
-   {
-       // Page Up
-   }
-   if (currentlyPressedKeys[34]) 
-   {
-      // Page Down
-   }
-   */
-   xLastPos = xPos;
-   yLastPos = yPos;
-   if (currentlyPressedKeys[37]) 
-   {
-      // Left cursor key
-      xPos -= 0.1;
-   }
-   if (currentlyPressedKeys[39]) 
-   {
-      // Right cursor key
-      xPos += 0.1;
-   }
-   if (currentlyPressedKeys[38]) 
-   {
-      // Up cursor key
-      yPos += 0.1;
-   }
-   if (currentlyPressedKeys[40]) 
-   {
-      // Down cursor key
-      yPos -= 0.1;
-   }
-   updateZRot();
-
-   if (currentlyPressedKeys[65])
-   {
-      var idx = Math.floor(Math.random() * numHex);
-      setHexAlphaById(idx, 0.5);
-   }
-   if (currentlyPressedKeys[90])
-   {
-      alpha -= 0.01;
-      console.log(alpha);
-   }
-}
-
-function pointToHexId(p)
+function hexPointToId(p)
 {   
-   var xoffset = hexSizeResidual * 0.5;
-   var yoffset = hexR;
+   var xoffset = -sqrSize + hexSizeResidual * 0.5;
+   var yoffset = -sqrSize + hexR * 0.5;
    var x = p[0] - xoffset;
    var y = p[1] - yoffset;
    var row = Math.floor(y / hexR);
-   var col = Math.floor(x / (2 * hexSize - 0.5 * hexSizeResidual));
-      
-   var idx = row * numCols + col;
+   var col = Math.floor(x / (2 * (hexSize - 0.5*hexSizeResidual)));
+
+   var i = row;
+   var j = 0;
+   if (i % 2 == 0)
+   {
+      j = (j-1)/2.0;
+   }
+   else
+   {
+      j = j/2.0;
+   }
+
+   console.log("pointToHexId: "+xoffset+" "+yoffset+" "+x+" "+y+" "+row+" "+col+" "+i+" "+j);
+    
+   var idx = i * numCols + j;
    return idx;
 }
 
-function pointToHexCell(p)
+function hexPointToCell(p)
 {
    var idx = pointToHexId(p);
    return hexIdToCell(idx);
@@ -286,7 +395,7 @@ function hexIdToCell(idx)
    return [i,j];
 }
 
-function cellToHexId(cell)
+function hexCellToId(cell)
 {
    var idx = 0;
    if (cell[0] % 2 == 0)
@@ -353,7 +462,7 @@ function initBoard(shape, vertices, texCoords, colors)
 
             texCoords.push((shape[p]*margin+x+10)/20.0);
             texCoords.push((shape[p+1]*margin+y+10)/20.0);
-            texCoords.push(0.0); // 3rd component is alpha
+            texCoords.push(0.5); // 3rd component is alpha
 
             colors.push(0.5);
             colors.push(0.5);
@@ -367,14 +476,6 @@ function initBoard(shape, vertices, texCoords, colors)
    console.log(vertices.length + " " + texCoords.length);
 }
 
-function placePlayerInCell(idx)
-{
-   var point = hexCenterById(idx);
-   xPos = point[0];
-   yPos = point[1];
-   setHexAlphaById(idx, 0.5);
-   console.log("place player: "+xPos+" " +yPos+" id: "+idx);
-}
 
 function initBuffers() 
 {
@@ -596,6 +697,7 @@ function animate()
     if (lastTime != 0) 
     {
         var elapsed = timeNow - lastTime;
+        updatePlayer(elapsed);
     }
     lastTime = timeNow;
 }
@@ -603,7 +705,6 @@ function animate()
 function tick() 
 {
     requestAnimFrame(tick);
-    handleKeys();
     drawScene();
     animate();
 }
@@ -619,19 +720,10 @@ function webGLStart()
     var idx = Math.floor(Math.random() * numHex);
     placePlayerInCell(idx);
 
-    // tests
-    var idx1 = Math.floor(Math.random() * numHex);
-    var p1 = hexCenterById(idx1);
-    var cell1 = hexIdToCell(idx1);
-    var idx2 = cellToHexId(cell1);
-    console.log("TEST "+idx1+" "+p1+" "+cell1+" "+idx2);
-    placePlayerInCell(idx2);
-
-
-   var cell2 = hexIdToCell(0);
-   var cell3 = hexIdToCell(1);
-   var cell4 = hexIdToCell(2);
-   console.log("TEST2 "+ cell2+" "+cell3+" "+cell4);
+    //var p1 = hexCenterById(idx);
+    //var idx2 = pointToHexId(p1);
+    //var p2 = hexCenterById(idx2);
+    //console.log("TEST "+idx+" "+p1+" "+idx2+" "+p2);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
