@@ -20,10 +20,13 @@ var sqrColorBuffer;
 var sqrVertexPositionBuffer;
 var sqrVertexTextureCoordBuffer;
 
-var hexSize = 2.0;
+var hexSize = 2.0; // b
+var hexR = 0.0; // r
+var hexSizeResidual = 0.0; // b_prime
+var hexTextureCoords;
+var hexVertexCoords;
 var hexColorBuffer;
 var hexVertexPositionBuffer;
-var hexTextureCoords;
 var hexVertexTextureCoordBuffer;
 
 var numHex = 0;
@@ -234,7 +237,7 @@ function handleKeys()
    if (currentlyPressedKeys[65])
    {
       var idx = Math.floor(Math.random() * numHex);
-      showHex(idx);
+      setHexAlphaById(idx, 0.5);
    }
    if (currentlyPressedKeys[90])
    {
@@ -243,13 +246,74 @@ function handleKeys()
    }
 }
 
-function showHex(idx)
+function pointToHexId(p)
+{   
+   var xoffset = hexSizeResidual * 0.5;
+   var yoffset = hexR;
+   var x = p[0] - xoffset;
+   var y = p[1] - yoffset;
+   var row = Math.floor(y / hexR);
+   var col = Math.floor(x / (2 * hexSize - 0.5 * hexSizeResidual));
+      
+   var idx = row * numCols + col;
+   return idx;
+}
+
+function pointToHexCell(p)
+{
+   var idx = pointToHexId(p);
+   return hexIdToCell(idx);
+}
+
+function hexIdToCell(idx)
+{
+   var row = Math.floor(idx/numCols);
+   var tmp = idx - row * numCols;
+   
+   var i = 0;
+   var j = 0;
+   if (row % 2 == 0)
+   {
+      i = row;
+      j = tmp*2+1;
+   }
+   else
+   {
+      i = row;
+      j = tmp*2;
+   }
+
+   return [i,j];
+}
+
+function cellToHexId(cell)
+{
+   var idx = 0;
+   if (cell[0] % 2 == 0)
+   {
+      idx = cell[0] * numCols + (cell[1]-1)/2;
+   }
+   else
+   {
+      idx = cell[0] * numCols + cell[1]/2;
+   }
+   return idx;
+}
+
+function hexCenterById(idx)
 {
    var offset = idx * numHexPts;
-   console.log(offset + " " + numHexPts + " " + idx);
+   x =  hexVertexCoords[offset+0+0]; // => 0 is first vertex, 0 is x'th element
+   y =  hexVertexCoords[offset+0+1]; // => 0 is first vertex, 1 is y'th element
+   return [x,y,0];
+}
+
+function setHexAlphaById(idx, alpha)
+{
+   var offset = idx * numHexPts;
    for (var i = 0; i < numHexPts; i += 3)
    {
-      hexTextureCoords[offset+i+2] = 0.5;
+      hexTextureCoords[offset+i+2] = alpha;
    } 
 }
 
@@ -264,8 +328,7 @@ function initBoard(shape, vertices, texCoords, colors)
    numCols = Math.floor((2*(sqrSize - hexSize)/(hexSize*3))+0.5);
    numHexPts = shape.length;
    hexR = r;
-   xPos = -sqrSize + hexSize;
-   yPos = -sqrSize + 2*r;
+   hexSizeResidual = offset;
 
    console.log(numRows + " " + numCols + " " + r);
    var startx = -sqrSize;
@@ -302,6 +365,15 @@ function initBoard(shape, vertices, texCoords, colors)
       y += r;
    }
    console.log(vertices.length + " " + texCoords.length);
+}
+
+function placePlayerInCell(idx)
+{
+   var point = hexCenterById(idx);
+   xPos = point[0];
+   yPos = point[1];
+   setHexAlphaById(idx, 0.5);
+   console.log("place player: "+xPos+" " +yPos+" id: "+idx);
 }
 
 function initBuffers() 
@@ -401,9 +473,10 @@ function initBuffers()
     var colors = [];
     initBoard(shape, vertices, textureCoords, colors);
 
+    hexVertexCoords = new Float32Array(vertices);
     hexVertexPositionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, hexVertexPositionBuffer);    
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, hexVertexCoords, gl.STATIC_DRAW);
     hexVertexPositionBuffer.itemSize = 3;
     hexVertexPositionBuffer.numItems = vertices.length/3;
 
@@ -542,6 +615,23 @@ function webGLStart()
     initShaders();
     initBuffers();
     initTexture();
+
+    var idx = Math.floor(Math.random() * numHex);
+    placePlayerInCell(idx);
+
+    // tests
+    var idx1 = Math.floor(Math.random() * numHex);
+    var p1 = hexCenterById(idx1);
+    var cell1 = hexIdToCell(idx1);
+    var idx2 = cellToHexId(cell1);
+    console.log("TEST "+idx1+" "+p1+" "+cell1+" "+idx2);
+    placePlayerInCell(idx2);
+
+
+   var cell2 = hexIdToCell(0);
+   var cell3 = hexIdToCell(1);
+   var cell4 = hexIdToCell(2);
+   console.log("TEST2 "+ cell2+" "+cell3+" "+cell4);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
