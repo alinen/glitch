@@ -185,67 +185,140 @@ function handleKeyDown(event)
 
 function handleKeyUp(event) 
 {
-   console.log(event.keyCode);
+   var result = null;
    if (event.keyCode === 81) //q
    {
-      var cell = hexIdToCell(idxCurr);
-      var nextCell = [cell[0]+1, cell[1]-1];
-      if (isValid(nextCell))
-      {
-         queueDir(-0.866, 0.5);
-         idxNext = hexCellToId(nextCell);    
-      }
+      result = goNW(idxCurr);
    }
    if (event.keyCode === 87) //w
    {
-      var cell = hexIdToCell(idxCurr);
-      var nextCell = [cell[0]+2, cell[1]];
-      if (isValid(nextCell))
-      {
-         queueDir(0, 1);
-         idxNext = hexCellToId(nextCell);    
-      }
+      result = goN(idxCurr);    
    }
    if (event.keyCode === 69) //e
    {
-      var cell = hexIdToCell(idxCurr);
-      var nextCell = [cell[0]+1, cell[1]+1];
-      if (isValid(nextCell))
-      {
-         queueDir(0.866, 0.5);
-         idxNext = hexCellToId(nextCell);    
-      }
+      result = goNE(idxCurr);     
    }
    if (event.keyCode === 65) //a
    {
-      var cell = hexIdToCell(idxCurr);
-      var nextCell = [cell[0]-1, cell[1]-1];
-      if (isValid(nextCell))
-      {
-         queueDir(-0.866, -0.5);
-         idxNext = hexCellToId(nextCell);    
-      }
+      result = goSW(idxCurr);     
    }
    if (event.keyCode === 83) //s
    {
-      var cell = hexIdToCell(idxCurr);
-      var nextCell = [cell[0]-2, cell[1]];
-      if (isValid(nextCell))
-      {
-         queueDir(0, -1);
-         idxNext = hexCellToId(nextCell);    
-      }
+      result = goS(idxCurr);  
    }
    if (event.keyCode === 68) //d
    {
-      var cell = hexIdToCell(idxCurr);
-      var nextCell = [cell[0]-1, cell[1]+1];
-      if (isValid(nextCell))
-      {
-         queueDir(0.866, -0.5);
-         idxNext = hexCellToId(nextCell);    
-      }
+      result = goSE(idxCurr);    
    }
+
+   if (result)
+   {
+      idxNext = result.idx;
+      if (idxNext !== -1)
+      {
+         queueDir(result.dir);
+      }
+      else
+      {
+         clearDir();
+      }        
+   }
+}
+
+function attemptMove(idxCurrent, dir)
+{
+   if (dir[0] < 0 && dir[1] > 0) //q
+   {
+      return goNW(idxCurrent);
+   }
+   else if (dir[0] === 0 && dir[1] === 1) //w
+   {
+      return goN(idxCurrent);     
+   }
+   else if (dir[0] > 0 && dir[1] > 0) //e
+   {
+      return goNE(idxCurrent);
+   }
+   else if (dir[0] < 0 && dir[1] < 0) //a
+   {
+      return goSW(idxCurrent);      
+   }
+   else if (dir[0] === 0 && dir[1] === -1) //s
+   {
+      return goS(idxCurrent);     
+   }
+   else if (dir[0] > 0 && dir[1] < 0) //d
+   {
+      return goSE(idxCurrent);  
+   }
+
+   return {idx : -1, dir : [0,0]};
+}
+
+function goNW(idxCurrent)
+{
+   var cell = hexIdToCell(idxCurr);
+   var nextCell = [cell[0]+1, cell[1]-1];
+   if (isValid(nextCell))
+   {
+      return { idx: hexCellToId(nextCell), dir : [-0.866, 0.5]};
+   }
+   return {idx: -1, dir : [0,0]};
+}
+
+function goN(idxCurrent)
+{
+   var cell = hexIdToCell(idxCurr);
+   var nextCell = [cell[0]+2, cell[1]];
+   if (isValid(nextCell))
+   {
+      return { idx: hexCellToId(nextCell), dir : [0,1]};
+   }   
+   return {idx: -1, dir : [0,0]};
+}
+
+function goNE(idxCurrent)
+{
+   var cell = hexIdToCell(idxCurr);
+   var nextCell = [cell[0]+1, cell[1]+1];
+   if (isValid(nextCell))
+   {
+      return {idx : hexCellToId(nextCell), dir : [0.866, 0.5] };
+   }   
+   return {idx: -1, dir : [0,0]};
+}
+
+function goSW(idxCurrent)
+{
+   var cell = hexIdToCell(idxCurr);
+   var nextCell = [cell[0]-1, cell[1]-1];
+   if (isValid(nextCell))
+   {
+      return {idx : hexCellToId(nextCell), dir : [-0.866, -0.5] };
+   }   
+   return {idx: -1, dir : [0,0]};
+}
+
+function goS(idxCurrent)
+{
+   var cell = hexIdToCell(idxCurr);
+   var nextCell = [cell[0]-2, cell[1]];
+   if (isValid(nextCell))
+   {
+      return { idx: hexCellToId(nextCell), dir : [0, -1] };
+   }   
+   return {idx: -1, dir : [0,0]};
+}
+
+function goSE(idxCurrent)
+{
+   var cell = hexIdToCell(idxCurr);
+   var nextCell = [cell[0]-1, cell[1]+1];
+   if (isValid(nextCell))
+   {
+      return {idx : hexCellToId(nextCell), dir : [0.866, -0.5] };
+   }   
+   return {idx: -1, dir : [0,0]};
 }
 
 function distanceSqr(x1, y1, x2, y2)
@@ -266,18 +339,22 @@ function updatePlayer(dt)
       {
          setHexAlphaById(idxNext, 1.0);
 
-         console.log(xPos + " " + yPos + " " + idxNext + " " + xNextDir + " " + yNextDir);
-
          xDir = xNextDir;
          yDir = yNextDir;
          idxCurr = idxNext;
          xPos = target[0];
          yPos = target[1];
 
-         idxNext = -1; // ASN TODO: Need to set this to something valid based on xDir,yDir or else we can't stop!!!
-         xNextDir = 0;
-         yNextDir = 0;
-
+         var nextMove = attemptMove(idxCurr, [xDir, yDir]);
+         idxNext = nextMove.idx;
+         if (idxNext !== -1)
+         {
+            queueDir(nextMove.dir);
+         }
+         else
+         {
+            clearDir();
+         }
       }
    }
 
@@ -326,20 +403,28 @@ function isValid(cell)
    return true;
 }
 
-function queueDir(xd, yd)
+function queueDir(dir)
 {
    if (xDir === 0 && yDir === 0)
    {
-      xDir = xd;
-      yDir = yd;
+      xDir = dir[0];
+      yDir = dir[1];
       xNextDir = 0;
       yNextDir = 0;      
    }
    else
    {
-      xNextDir = xd;
-      yNextDir = yd;
+      xNextDir = dir[0];
+      yNextDir = dir[1];
    }
+}
+
+function clearDir()
+{
+   xDir = 0;
+   yDir = 0;
+   xNextDir = 0;
+   yNextDir = 0;      
 }
 
 function hexPointToId(p)
