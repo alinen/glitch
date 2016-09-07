@@ -30,9 +30,9 @@ function isOk(canvas)
    return canvas && canvas.getContext;
 }
 
-function initPalletSelect(className)
+function initPaletteSelect(className)
 {
-   var options = ""; // get all pallets automatically
+   var options = ""; // get all palettes automatically
    for (var key of colormaps.keys())
    {
       options += "<option id='" +key+ "'>" +key+ "</option>";
@@ -42,7 +42,7 @@ function initPalletSelect(className)
 
 function initNoiseCloudExperiment()
 {
-   initPalletSelect("CLS-noise-cloud-select-pallet");
+   initPaletteSelect("CLS-noise-cloud-select-palette");
 }
 
 function experimentStart()
@@ -73,7 +73,7 @@ function experimentStart()
        <tr>
        <td><canvas id="ID-noise-cloud-canvas" style="border: 2px solid black;" width="256" height="256"></canvas></td>
        <td>
-          <select id="ID-noise-cloud-select" class="CLS-noise-cloud-select-pallet" onchange="computeNoiseCloud();">
+          <select id="ID-noise-cloud-select" class="CLS-noise-cloud-select-palette" onchange="computeNoiseCloud();">
           </select>
           <p class="Label">Sub distance</p> 
           <input id="ID-noise-cloud-sub" type="range" min="0.0" max="256" step="1.0" value="5.0" onchange="computeNoiseCloud();"/> 
