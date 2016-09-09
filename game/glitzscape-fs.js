@@ -39,7 +39,7 @@ var fragmentShaderSource_ForegroundBlend = `
 `;
 
 
-var fragmentShaderSource_Cyan = `
+var fragmentShaderSource_Solid = `
    precision mediump float;
    varying vec3 vTextureCoord;
    varying vec3 vColor;
@@ -47,7 +47,7 @@ var fragmentShaderSource_Cyan = `
 
    void main(void) 
    {
-      gl_FragColor = vec4(0.,1.,1.,1.);
+      gl_FragColor = vec4(vColor,1.);
    }
 `;
 

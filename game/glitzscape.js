@@ -5,6 +5,7 @@ const DEG2RAD = Math.PI / 180.0;
 var gl;
 var shaderBackground;
 var shaderForeground;
+var shaderSolid;
 var backgroundTex;
 var mvMatrix = mat4.create();
 var mvMatrixStack = [];
@@ -26,6 +27,8 @@ var sqrVertexTextureCoordBuffer;
 var hexColorBuffer;
 var hexVertexPositionBuffer;
 var hexVertexTextureCoordBuffer;
+var hexLinesPositionBuffer;
+var hexLinesColorBuffer;
 
 // game state
 var lastTime = 0;
@@ -105,6 +108,10 @@ function initShaders()
     var fragmentForeground = getShader(gl, fragmentShaderSource_ForegroundBlend, gl.FRAGMENT_SHADER);
     shaderForeground = initShader(fragmentForeground, vertexShader);
     console.log("Initialized vertexShaderSource, fragmentShaderSource_ForegroundBlend");
+
+    var fragmentSolid = getShader(gl, fragmentShaderSource_Solid, gl.FRAGMENT_SHADER);
+    shaderSolid = initShader(fragmentSolid, vertexShader);
+    console.log("Initialized vertexShaderSource, fragmentShaderSource_ForegroundBlend");    
 }
 
 function handleLoadedTexture(texture) 
@@ -156,7 +163,7 @@ function mvPushMatrix()
 
 function mvPopMatrix() 
 {
-    if (mvMatrixStack.length == 0) 
+    if (mvMatrixStack.length === 0) 
     {
         throw "Invalid popMatrix!";
     }
@@ -297,6 +304,7 @@ function initBuffers()
 
     //--
     hexBoard.initBoard();
+    hexBoard.computeMaze();
 
     hexVertexPositionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, hexVertexPositionBuffer);    
@@ -314,7 +322,19 @@ function initBuffers()
     gl.bindBuffer(gl.ARRAY_BUFFER, hexVertexTextureCoordBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, hexBoard.uvs, gl.DYNAMIC_DRAW);
     hexVertexTextureCoordBuffer.itemSize = 3;
-    hexVertexTextureCoordBuffer.numItems = hexBoard.uvs.length/2;    
+    hexVertexTextureCoordBuffer.numItems = hexBoard.uvs.length/3;
+
+    hexLinesPositionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, hexLinesPositionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, hexBoard.lines, gl.DYNAMIC_DRAW);
+    hexLinesPositionBuffer.itemSize = 3;
+    hexLinesPositionBuffer.numItems = hexBoard.lines.length/3;
+
+    hexLinesColorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, hexLinesColorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, hexBoard.lineColors, gl.DYNAMIC_DRAW);
+    hexLinesPositionBuffer.itemSize = 3;
+    hexLinesPositionBuffer.numItems = hexBoard.lineColors.length/3;
 }
 
 function drawTriangle()
@@ -369,6 +389,23 @@ function drawHexBoard()
     gl.uniformMatrix4fv(shaderForeground.mvMatrixUniform, false, mvMatrix);
     gl.drawArrays(gl.TRIANGLES, 0, hexVertexPositionBuffer.numItems);
     mvPopMatrix();   
+
+    mvPushMatrix();
+    mat4.translate(mvMatrix, [0, 0, -8.5]);
+
+    gl.useProgram(shaderSolid);
+    gl.bindBuffer(gl.ARRAY_BUFFER, hexLinesPositionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, hexBoard.lines, gl.DYNAMIC_DRAW);
+    gl.vertexAttribPointer(shaderSolid.vertexPositionAttribute, hexLinesPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, hexLinesColorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, hexBoard.lineColors, gl.DYNAMIC_DRAW);
+    gl.vertexAttribPointer(shaderSolid.colorAttribute, hexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+    gl.uniformMatrix4fv(shaderSolid.pMatrixUniform, false, pMatrix);
+    gl.uniformMatrix4fv(shaderSolid.mvMatrixUniform, false, mvMatrix);
+    gl.drawArrays(gl.LINES, 0, hexLinesPositionBuffer.numItems);
+    mvPopMatrix();       
 }
 
 function drawBackground()

@@ -1,3 +1,12 @@
+class MazeNode
+{
+   constructor()
+   {
+      this.neighbors = [];
+      this.visited = false;
+   }
+}
+
 class HexBoard
 {
    constructor(hexSize, boardSize, margin)
@@ -6,8 +15,10 @@ class HexBoard
       this.r = this.b / (2 * Math.tan(30 * DEG2RAD)); // see docs
       this.bRes = Math.sqrt(this.b * this.b - this.r * this.r); // see docs, extends b to edge of bounding square
       this.uvs = []; // dynamic
-      this.vertices = [];  // static, kept for lookup
-      this.colors = [];   // static, may become dynamic
+      this.vertices = [];  // static, kept for lookup, may become dynamic
+      this.colors = [];   // static, may become dynamic, should change when maze changes
+      this.lines = []; // dynamic, changes when maze changes
+      this.lineColors = []; // dynamic, changes when maze changes
       this.boardSize = boardSize;
 
       this.scale = 1.0-margin;
@@ -31,7 +42,7 @@ class HexBoard
          this.shape.push(this.b * Math.sin(angle * (i+1)));
          this.shape.push(0.0);       
       }      
-      this.numHexPts = this.shape.length;    
+      this.numHexPts = this.shape.length;          
    }
 
    initBoard()
@@ -40,7 +51,6 @@ class HexBoard
       var textureList = [];
       var colorList = [];
 
-      console.log("Init board: " + this.numRows + " " + this.numCols + " " + this.r);
       var startx = -this.boardSize;
       var y = -this.boardSize + this.r;
       for (var i = 0; i < this.numRows; i++)
@@ -61,7 +71,7 @@ class HexBoard
    
                textureList.push((this.shape[p] * this.scale+x+10)/20.0);
                textureList.push((this.shape[p+1] * this.scale+y+10)/20.0);
-               textureList.push(0.1); // 3rd component is alpha
+               textureList.push(0.5); // 3rd component is alpha
    
                colorList.push(0.5);
                colorList.push(0.5);
@@ -76,7 +86,116 @@ class HexBoard
       this.vertices = new Float32Array(vertexList);
       this.colors = new Float32Array(colorList);
       this.uvs = new Float32Array(textureList);
+
+      console.log("Init board: " + this.numRows + " " + this.numCols + " " + this.numHex);
+
+      this.maze = []; // ASN: What is the javascript way to init an array of type A and size N?
+      for (var i = 0; i < this.numHex; i++) this.maze.push(new MazeNode());
    }   
+
+   computeMaze()
+   {
+      for (var i = 0; i < this.maze.length; i++)
+      {
+         this.maze[i].visited = false;
+         this.maze[i].neighbors = [];
+      }
+
+      // select random start node and push to a stack
+      // do bfs search
+      var startIdx = Math.floor(Math.random() * this.numHex);
+
+      var Q = [];
+      Q.push(startIdx);
+      while (Q.length > 0)
+      {
+         var nextIdx = Q.pop();
+         this.maze[nextIdx].visited = true;
+
+         var allNeighbors = this.getNeighbors(nextIdx);
+         this.shuffle(allNeighbors);
+
+         for (var n = 0; n < allNeighbors.length; n++)
+         {
+            var neighbor = allNeighbors[n];
+            if (!this.maze[neighbor].visited)
+            {
+               this.maze[neighbor].visited = true;
+               this.maze[nextIdx].neighbors.push(neighbor);
+               Q.push(neighbor);
+            }
+         }
+      }
+
+      var vertexList = [];
+      var colorList = [];
+      for (var i = 0; i < this.maze.length; i++)
+      {
+         // draw lines between each node and it's neighbors
+         var node = this.maze[i];
+         var p1 = this.getHexCenterById(i);
+
+         //console.log(node.neighbors);
+         for (var n = 0; n < node.neighbors.length; n++)
+         {
+            var neighbor = node.neighbors[n];
+            var p2 = this.getHexCenterById(neighbor);
+            //console.log(neighbor + " "+p1.x+" "+p1.y+" "+p2.x+" "+p2.y);
+            vertexList.push(p1.x);
+            vertexList.push(p1.y);
+            vertexList.push(0.0);
+  
+            vertexList.push(p2.x);
+            vertexList.push(p2.y);
+            vertexList.push(0.0);
+
+            colorList.push(1);
+            colorList.push(1);
+            colorList.push(1);
+
+            colorList.push(1);
+            colorList.push(1); // 3rd component is alpha
+            colorList.push(1); // 3rd component is alpha
+         }
+      }     
+      this.lines = new Float32Array(vertexList);
+      this.lineColors = new Float32Array(colorList);
+   }
+
+   shuffle(array) // Fisher–Yates_shuffle
+   {
+      for (var i = array.length-1; i > 0; i--)
+      {
+         var roll = Math.floor(Math.random() * i);
+         var tmp = array[i];
+         array[i] = array[roll];
+         array[roll] = tmp;
+      }
+   }
+
+   getNeighbors(idx)
+   {
+      var cell = this.idToCell(idx); 
+      var potentials = [
+         {i: cell.i+1, j: cell.j-1},
+         {i: cell.i+2, j: cell.j},
+         {i: cell.i+1, j: cell.j+1},
+         {i: cell.i-1, j: cell.j-1},
+         {i: cell.i-2, j: cell.j},
+         {i: cell.i-1, j: cell.j+1}
+      ];
+
+      var neighbors = [];
+      for (var i = 0; i < potentials.length; i++)
+      {
+         if (this.isValidHex(potentials[i]))
+         {
+            neighbors.push(this.cellToId(potentials[i]));
+         }
+      }
+
+      return neighbors;
+   }
 
    setHexAlphaById(idx, alpha)
    {
@@ -201,30 +320,30 @@ class HexBoard
       return isValid(cell);
    }
    
-   function isValid(cell)
+   */
+
+   isValidHex(cell)
    {
-      // todo: check against generated graph
-      console.log("IS VALID "+cell+ " " + numRows + " " + numCols);
-      if (cell[0] < 0) return false;
-      if (cell[1] < 0) return false;
+      if (cell.i < 0) return false;
+      if (cell.j < 0) return false;
    
-      if (cell[0] >= numRows) return false;
-      if (cell[1] >= numCols*2) return false;
+      if (cell.i >= this.numRows) return false;
+      if (cell.j >= this.numCols*2) return false;
    
-      if (cell[0] % 2 === 0 && cell[1] % 2 === 0) return false;
-      if (cell[0] % 2 === 1 && cell[1] % 2 === 1) return false;
+      if (cell.i % 2 === 0 && cell.j % 2 === 0) return false;
+      if (cell.i % 2 === 1 && cell.j % 2 === 1) return false;
    
       return true;
    }
    
    
-   function hexPointToId(p)
+   pointToId(p)
    {   
       var xoffset = -sqrSize + this.bRes * 0.5;
-      var yoffset = -sqrSize + hexR * 0.5;
+      var yoffset = -sqrSize + this.r * 0.5;
       var x = p[0] - xoffset;
       var y = p[1] - yoffset;
-      var row = Math.floor(y / hexR);
+      var row = Math.floor(y / this.hexR);
       var col = Math.floor(x / (2 * (this.b - 0.5*this.bRes)));
    
       var i = row;
@@ -240,20 +359,20 @@ class HexBoard
    
       console.log("pointToHexId: "+xoffset+" "+yoffset+" "+x+" "+y+" "+row+" "+col+" "+i+" "+j);
       
-      var idx = i * numCols + j;
+      var idx = i * this.numCols + j;
       return idx;
    }
    
-   function hexPointToCell(p)
+   pointToCell(p)
    {
-      var idx = pointToHexId(p);
-      return hexIdToCell(idx);
+      var idx = this.pointToHexId(p);
+      return this.hexIdToCell(idx);
    }
    
-   function hexIdToCell(idx)
+   idToCell(idx)
    {
-      var row = Math.floor(idx/numCols);
-      var tmp = idx - row * numCols;
+      var row = Math.floor(idx/this.numCols);
+      var tmp = idx - row * this.numCols;
       
       var i = 0;
       var j = 0;
@@ -268,26 +387,22 @@ class HexBoard
          j = tmp*2;
       }
    
-      return [i,j];
+      return {i:i,j:j};
    }
    
-   function hexCellToId(cell)
+   cellToId(cell)
    {
       var idx = 0;
-      if (cell[0] % 2 == 0)
+      if (cell.i % 2 == 0)
       {
-         idx = cell[0] * numCols + (cell[1]-1)/2;
+         idx = cell.i * this.numCols + (cell.j-1)/2;
       }
       else
       {
-         idx = cell[0] * numCols + cell[1]/2;
+         idx = cell.i * this.numCols + cell.j/2;
       }
       return idx;
    }
-   
 
-   
-
-   */
 }
 
