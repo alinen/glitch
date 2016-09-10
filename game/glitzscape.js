@@ -172,59 +172,37 @@ function mvPopMatrix()
 
 function handleKeyDown(event) 
 {
+    var move = null;
+    if (event.keyCode === 81) //q
+    {
+       move = NEIGHBOR.NW;
+    }
+    if (event.keyCode === 87) //w
+    {
+       move = NEIGHBOR.N;
+    }
+    if (event.keyCode === 69) //e
+    {
+       move = NEIGHBOR.NE;
+    }
+    if (event.keyCode === 65) //a
+    {
+       move = NEIGHBOR.SW;
+    }
+    if (event.keyCode === 83) //s
+    {
+       move = NEIGHBOR.S;
+    }
+    if (event.keyCode === 68) //d
+    {
+       move = NEIGHBOR.SE;
+    }
+   
+    if (move) player.attemptMove(move);
 }
 
 function handleKeyUp(event) 
 {
-}
-
-/*
-function handleKeyUp(event) 
-{
-   var result = null;
-   if (event.keyCode === 81) //q
-   {
-      result = goNW(idxCurr);
-   }
-   if (event.keyCode === 87) //w
-   {
-      result = goN(idxCurr);    
-   }
-   if (event.keyCode === 69) //e
-   {
-      result = goNE(idxCurr);     
-   }
-   if (event.keyCode === 65) //a
-   {
-      result = goSW(idxCurr);     
-   }
-   if (event.keyCode === 83) //s
-   {
-      result = goS(idxCurr);  
-   }
-   if (event.keyCode === 68) //d
-   {
-      result = goSE(idxCurr);    
-   }
-
-   if (result)
-   {
-      idxNext = result.idx;
-      if (idxNext !== -1)
-      {
-         queueDir(result.dir);
-      }
-      else
-      {
-         clearDir();
-      }        
-   }
-}*/
-
-function distanceSqr(a, b)
-{
-   var d = (a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y);
-   return d;
 }
 
 function initBuffers() 
@@ -243,10 +221,10 @@ function initBuffers()
          1.0, 1.0, 1.0
     ];
     var textureCoords = [      
-      1.0, 1.0, 1.0,
-      0.0, 1.0, 1.0,
-      1.0, 0.0, 1.0,
-      0.0, 0.0, 1.0
+         1.0, 1.0, 1.0,
+         0.0, 1.0, 1.0,
+         1.0, 0.0, 1.0,
+         0.0, 0.0, 1.0
     ];
 
     sqrVertexPositionBuffer = gl.createBuffer();
@@ -456,7 +434,7 @@ function animate()
     if (lastTime != 0) 
     {
         var elapsed = timeNow - lastTime;
-        // todo:updatePlayer(elapsed);
+        player.update(elapsed);
     }
     lastTime = timeNow;
 }

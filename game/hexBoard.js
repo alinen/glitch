@@ -8,12 +8,12 @@ class MazeNode
 }
 
 var NEIGHBOR = {
-   NE : 0, 
-   N  : 1, 
-   NW : 2,
-   SW : 3,
-   S  : 4,
-   SE : 5,
+   NE : {value:0, dir:{x: 0.866, y: 0.500}, offset:{i: 1, j: 1} },
+   N  : {value:1, dir:{x: 0.000, y: 1.000}, offset:{i: 2, j: 0} },
+   NW : {value:2, dir:{x:-0.866, y: 0.500}, offset:{i: 1, j:-1} },
+   SW : {value:3, dir:{x:-0.866, y:-0.500}, offset:{i:-1, j: 1} },
+   S  : {value:4, dir:{x: 0.000, y:-1.000}, offset:{i:-2, j: 0} },
+   SE : {value:5, dir:{x: 0.866, y:-0.500}, offset:{i:-1, j:-1} }
 };
 
 class HexBoard
@@ -80,7 +80,7 @@ class HexBoard
    
                textureList.push((this.shape[p] * this.scale+x+10)/20.0);
                textureList.push((this.shape[p+1] * this.scale+y+10)/20.0);
-               textureList.push(0.5); // 3rd component is alpha
+               textureList.push(0.0); // 3rd component is alpha
    
                colorList.push(0.5);
                colorList.push(0.5);
@@ -254,12 +254,12 @@ class HexBoard
    getNeighborId(idx, side)
    {
       var cell = this.idToCell(idx); 
-      if (side === NEIGHBOR.NE) return this.cellToId({i: cell.i+1, j: cell.j+1});
-      else if (side === NEIGHBOR.N) return this.cellToId({i: cell.i+2, j: cell.j});
-      else if (side === NEIGHBOR.NW) return this.cellToId({i: cell.i+1, j: cell.j-1});
-      else if (side === NEIGHBOR.SW) return this.cellToId({i: cell.i-1, j: cell.j-1});
-      else if (side === NEIGHBOR.S) return this.cellToId({i: cell.i-2, j: cell.j});
-      else if (side === NEIGHBOR.SE) return this.cellToId({i: cell.i-1, j: cell.j+1});
+      if (side === NEIGHBOR.NE.value) return this.cellToId({i: cell.i+1, j: cell.j+1});
+      else if (side === NEIGHBOR.N.value) return this.cellToId({i: cell.i+2, j: cell.j});
+      else if (side === NEIGHBOR.NW.value) return this.cellToId({i: cell.i+1, j: cell.j-1});
+      else if (side === NEIGHBOR.SW.value) return this.cellToId({i: cell.i-1, j: cell.j-1});
+      else if (side === NEIGHBOR.S.value) return this.cellToId({i: cell.i-2, j: cell.j});
+      else if (side === NEIGHBOR.SE.value) return this.cellToId({i: cell.i-1, j: cell.j+1});
       return -1;
    }
 
@@ -304,114 +304,18 @@ class HexBoard
       return {x:x, y:y};
    }   
 
-   /*
-
-   function attemptMove(idxCurrent, dir)
+   isValidMove(idx, dir)
    {
-      if (dir[0] < 0 && dir[1] > 0) //q
+      console.log("isValidMove "+idx + " "+dir);
+      var node = this.maze[idx];
+      var neighborIdx = this.getNeighborId(idx, dir.value);
+      for (var i = 0; i < node.neighbors.length; i++)
       {
-         return goNW(idxCurrent);
+         if (neighborIdx === node.neighbors[i]) return neighborIdx;
       }
-      else if (dir[0] === 0 && dir[1] === 1) //w
-      {
-         return goN(idxCurrent);     
-      }
-      else if (dir[0] > 0 && dir[1] > 0) //e
-      {
-         return goNE(idxCurrent);
-      }
-      else if (dir[0] < 0 && dir[1] < 0) //a
-      {
-         return goSW(idxCurrent);      
-      }
-      else if (dir[0] === 0 && dir[1] === -1) //s
-      {
-         return goS(idxCurrent);     
-      }
-      else if (dir[0] > 0 && dir[1] < 0) //d
-      {
-         return goSE(idxCurrent);  
-      }
-   
-      return {idx : -1, dir : [0,0]};
+      return -1;
    }
-   
-   function goNW(idxCurrent)
-   {
-      var cell = hexIdToCell(idxCurr);
-      var nextCell = [cell[0]+1, cell[1]-1];
-      if (isValid(nextCell))
-      {
-         return { idx: hexCellToId(nextCell), dir : [-0.866, 0.5]};
-      }
-      return {idx: -1, dir : [0,0]};
-   }
-   
-   function goN(idxCurrent)
-   {
-      var cell = hexIdToCell(idxCurr);
-      var nextCell = [cell[0]+2, cell[1]];
-      if (isValid(nextCell))
-      {
-         return { idx: hexCellToId(nextCell), dir : [0,1]};
-      }   
-      return {idx: -1, dir : [0,0]};
-   }
-   
-   function goNE(idxCurrent)
-   {
-      var cell = hexIdToCell(idxCurr);
-      var nextCell = [cell[0]+1, cell[1]+1];
-      if (isValid(nextCell))
-      {
-         return {idx : hexCellToId(nextCell), dir : [0.866, 0.5] };
-      }   
-      return {idx: -1, dir : [0,0]};
-   }
-   
-   function goSW(idxCurrent)
-      {
-      var cell = hexIdToCell(idxCurr);
-      var nextCell = [cell[0]-1, cell[1]-1];
-      if (isValid(nextCell))
-      {
-         return {idx : hexCellToId(nextCell), dir : [-0.866, -0.5] };
-      }   
-      return {idx: -1, dir : [0,0]};
-   }
-   
-   function goS(idxCurrent)
-   {
-         var cell = hexIdToCell(idxCurr);
-      var nextCell = [cell[0]-2, cell[1]];
-      if (isValid(nextCell))
-      {
-         return { idx: hexCellToId(nextCell), dir : [0, -1] };
-      }   
-      return {idx: -1, dir : [0,0]};
-   }
-   
-   function goSE(idxCurrent)
-   {
-      var cell = hexIdToCell(idxCurr);
-      var nextCell = [cell[0]-1, cell[1]+1];
-      if (isValid(nextCell))
-      {
-         return {idx : hexCellToId(nextCell), dir : [0.866, -0.5] };
-      }   
-      return {idx: -1, dir : [0,0]};
-   }
-   
-   
-   
-   function isValid(idx)
-   {
-      var cell = hexIdToCell(idx);
-      return isValid(cell);
-   }
-   
-   */
-
+ 
    isValidHex(cell)
    {
       if (cell.i < 0) return false;
@@ -425,7 +329,6 @@ class HexBoard
    
       return true;
    }
-   
    
    pointToId(p)
    {   
