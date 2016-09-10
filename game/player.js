@@ -4,8 +4,10 @@ class Player
    constructor() 
    {
       this.speed = 0.005;
-      this.rot = 0;
       this.pos = {x:0, y:0};
+      this.translate = {x:0,y:0,z:0},
+      this.scale = {s:1},
+      this.rot = {r:0},
       this.dir = {x:0, y:0};
       this.nextDir = {x:0, y:0};
       this.currentHex = -1;
@@ -25,6 +27,7 @@ class Player
       this.currentHex = hexIdx;
       this.targetHex = -1;
       this.nextHex = -1;
+      this.scale.s = hexBoard.b * 0.5;
    }   
 
    passedTarget(targetPos, threshold)
@@ -63,8 +66,11 @@ class Player
    
       if (Math.abs(this.dir.y) > 0.0 || Math.abs(this.dir.x) > 0.0)
       {
-         this.rot = Math.atan2(-this.dir.x, this.dir.y) / DEG2RAD;
+         this.rot.r = Math.atan2(-this.dir.x, this.dir.y) / DEG2RAD;
       }
+
+      this.translate.x = this.pos.x; 
+      this.translate.y = this.pos.y; 
    }
 
    attemptMove(move)

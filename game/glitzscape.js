@@ -3,37 +3,21 @@ const DEG2RAD = Math.PI / 180.0;
 
 // webGL state and helpers
 var gl;
-var shaderBackground;
-var shaderForeground;
+
+var shaderTex;
+var shaderTexInvert;
 var shaderSolid;
 var backgroundTex;
 var mvMatrix = mat4.create();
 var mvMatrixStack = [];
 var pMatrix = mat4.create();
-
-// player geometry
-var triSize = 0.25;
-var triColorBuffer;
-var triVertexPositionBuffer;
-var triVertexTextureCoordBuffer;
-
-// background geometry
-var sqrSize = 10.0;
-var sqrColorBuffer;
-var sqrVertexPositionBuffer;
-var sqrVertexTextureCoordBuffer;
-
-// hex geometry
-var hexColorBuffer;
-var hexVertexPositionBuffer;
-var hexVertexTextureCoordBuffer;
-var hexLinesPositionBuffer;
-var hexLinesColorBuffer;
+var geometry = [];
 
 // game state
+var worldSize = 10.0;
 var lastTime = 0;
 var player = new Player();
-var hexBoard = new HexBoard(1.0, sqrSize, 0.05);
+var hexBoard = new HexBoard(1.0, worldSize, 0.05);
 
 function initGL(canvas) 
 {
@@ -92,26 +76,25 @@ function initShader(fragmentShader, vertexShader)
     sp.pMatrixUniform = gl.getUniformLocation(sp, "uPMatrix");
     sp.mvMatrixUniform = gl.getUniformLocation(sp, "uMVMatrix");
     sp.samplerUniform = gl.getUniformLocation(sp, "uSampler");
-    sp.alphaUniform = gl.getUniformLocation(sp, "uAlpha");
 
     return sp;
 }
 
 function initShaders() 
 {
-    var fragmentBackground = getShader(gl, fragmentShaderSource_SimpleBlend, gl.FRAGMENT_SHADER);
+    var fragmentBackground = getShader(gl, fragmentShaderSource_Tex, gl.FRAGMENT_SHADER);
     var vertexShader = getShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
 
-    shaderBackground = initShader(fragmentBackground, vertexShader);
-    console.log("Initialized vertexShaderSource, fragmentShaderSource_SimpleBlend");
+    shaderTex = initShader(fragmentBackground, vertexShader);
+    console.log("Initialized vertexShaderSource, fragmentShaderSource_Tex");
 
-    var fragmentForeground = getShader(gl, fragmentShaderSource_ForegroundBlend, gl.FRAGMENT_SHADER);
-    shaderForeground = initShader(fragmentForeground, vertexShader);
-    console.log("Initialized vertexShaderSource, fragmentShaderSource_ForegroundBlend");
+    var fragmentForeground = getShader(gl, fragmentShaderSource_TexInvert, gl.FRAGMENT_SHADER);
+    shaderTexInvert = initShader(fragmentForeground, vertexShader);
+    console.log("Initialized vertexShaderSource, fragmentShaderSource_TexInvert");
 
     var fragmentSolid = getShader(gl, fragmentShaderSource_Solid, gl.FRAGMENT_SHADER);
     shaderSolid = initShader(fragmentSolid, vertexShader);
-    console.log("Initialized vertexShaderSource, fragmentShaderSource_ForegroundBlend");    
+    console.log("Initialized vertexShaderSource, fragmentShaderSource_Solid");    
 }
 
 function handleLoadedTexture(texture) 
@@ -201,217 +184,118 @@ function handleKeyDown(event)
     if (move) player.attemptMove(move);
 }
 
-function handleKeyUp(event) 
+function createGlBuffer(values, itemSize, numItems, type)
 {
+    var buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, values, type);
+    buffer.itemSize = itemSize;
+    buffer.numItems = numItems;
+    return buffer;
 }
 
 function initBuffers() 
 {
     //-- background quad
     var sVertices = [
-         sqrSize,  sqrSize,  0.0,
-        -sqrSize,  sqrSize,  0.0,
-         sqrSize, -sqrSize,  0.0,
-        -sqrSize, -sqrSize,  0.0
+         worldSize,  worldSize, -worldSize,
+        -worldSize,  worldSize, -worldSize,
+         worldSize, -worldSize, -worldSize,
+        -worldSize, -worldSize, -worldSize
     ];
     var sColors = [
-         1.0, 1.0, 1.0,
-         1.0, 1.0, 1.0,
-         1.0, 1.0, 1.0,
-         1.0, 1.0, 1.0
+         1.0, 1.0, 1.0, 1.0,
+         1.0, 1.0, 1.0, 1.0,
+         1.0, 1.0, 1.0, 1.0,
+         1.0, 1.0, 1.0, 1.0
     ];
-    var textureCoords = [      
-         1.0, 1.0, 1.0,
-         0.0, 1.0, 1.0,
-         1.0, 0.0, 1.0,
-         0.0, 0.0, 1.0
+    var sTexs = [      
+         1.0, 1.0,
+         0.0, 1.0, 
+         1.0, 0.0, 
+         0.0, 0.0
     ];
 
-    sqrVertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, sqrVertexPositionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sVertices), gl.STATIC_DRAW);
-    sqrVertexPositionBuffer.itemSize = 3;
-    sqrVertexPositionBuffer.numItems = 4;
-
-    sqrColorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, sqrColorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sColors), gl.STATIC_DRAW);
-    sqrColorBuffer.itemSize = 3;
-    sqrColorBuffer.numItems = 4;
-    
-    sqrVertexTextureCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, sqrVertexTextureCoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
-    sqrVertexTextureCoordBuffer.itemSize = 3;
-    sqrVertexTextureCoordBuffer.numItems = 4;
+    geometry.push(
+    {
+       vertexBuffer :  createGlBuffer(new Float32Array(sVertices), 3, 4, gl.STATIC_DRAW),
+       colorBuffer :   createGlBuffer(new Float32Array(sColors), 4, 4, gl.STATIC_DRAW),
+       textureBuffer : createGlBuffer(new Float32Array(sTexs), 2, 4, gl.STATIC_DRAW),
+       vertexDynamic : null,
+       colorDynamic : null,
+       textureDynamic : null,
+       translate : null,
+       rotate : null,
+       scale : null,
+       shader : shaderTex,
+       primitive : gl.TRIANGLE_STRIP
+    });
 
     //----    
     var tVertices = [
-         0.0,      triSize,  0.0,
-        -triSize, -triSize,  0.0,
-         triSize, -triSize,  0.0
+         0,  1,  0.0,
+        -1, -1,  0.0,
+         1, -1,  0.0
     ];
-    var sColors = [
-         0.0, 1.0, 1.0,
-         0.0, 1.0, 1.0,
-         0.0, 1.0, 1.0
+    var tColors = [
+         0.0, 0.0, 1.0, 1.0,
+         0.0, 0.0, 1.0, 1.0,
+         0.0, 0.0, 1.0, 1.0
     ];
-    var textureCoords = [      
-      (tVertices[0]+10)/20.0,  (tVertices[1]+10)/20.0, 1.0,
-      (tVertices[3]+10)/20.0,  (tVertices[4]+10)/20.0, 1.0,
-      (tVertices[6]+10)/20.0,  (tVertices[7]+10)/20.0, 1.0
+    var tTexs = [      
+        0.5, 1,
+        0,   0,
+        1,   0
     ];
 
-    triVertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triVertexPositionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(tVertices), gl.STATIC_DRAW);
-    triVertexPositionBuffer.itemSize = 3;
-    triVertexPositionBuffer.numItems = 3;
-
-    triColorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triColorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sColors), gl.STATIC_DRAW);
-    triColorBuffer.itemSize = 3;
-    triColorBuffer.numItems = 3;    
-
-    triVertexTextureCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triVertexTextureCoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
-    triVertexTextureCoordBuffer.itemSize = 3;
-    triVertexTextureCoordBuffer.numItems = 3;
+    geometry.push(
+    {
+       vertexBuffer : createGlBuffer(new Float32Array(tVertices), 3, 3, gl.STATIC_DRAW),
+       colorBuffer : createGlBuffer(new Float32Array(tColors), 4, 3, gl.STATIC_DRAW),
+       textureBuffer : createGlBuffer(new Float32Array(tTexs), 2, 3, gl.STATIC_DRAW),
+       vertexDynamic : null,
+       colorDynamic : null,
+       textureDynamic : null,
+       translate : player.translate,
+       rotate : player.rot,
+       scale : player.scale,
+       shader : shaderSolid,
+       primitive : gl.TRIANGLES
+    });
 
     //--
     hexBoard.initBoard();
     hexBoard.computeMaze();
 
-    hexVertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, hexVertexPositionBuffer);    
-    gl.bufferData(gl.ARRAY_BUFFER, hexBoard.vertices, gl.STATIC_DRAW);
-    hexVertexPositionBuffer.itemSize = 3;
-    hexVertexPositionBuffer.numItems = hexBoard.vertices.length/3;
+    geometry.push(
+    {
+       vertexBuffer :  createGlBuffer(hexBoard.vertices, 3, hexBoard.vertices.length/3, gl.STATIC_DRAW),
+       colorBuffer :   createGlBuffer(hexBoard.colors, 4, hexBoard.colors.length/4, gl.DYNAMIC_DRAW),
+       textureBuffer : createGlBuffer(hexBoard.uvs, 2, hexBoard.uvs.length/2, gl.STATIC_DRAW),
+       vertexDynamic : null,
+       colorDynamic : hexBoard.colors,
+       textureDynamic : null,
+       translate : hexBoard.gridPos,
+       rotate : null,
+       scale : null,
+       shader : shaderTex, // ASN: Use tex invert or similar
+       primitive : gl.TRIANGLES
+    });    
 
-    hexColorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, hexColorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, hexBoard.colors, gl.STATIC_DRAW);
-    hexColorBuffer.itemSize = 3;
-    hexColorBuffer.numItems = hexBoard.colors.length/3;  
-
-    hexVertexTextureCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, hexVertexTextureCoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, hexBoard.uvs, gl.DYNAMIC_DRAW);
-    hexVertexTextureCoordBuffer.itemSize = 3;
-    hexVertexTextureCoordBuffer.numItems = hexBoard.uvs.length/3;
-
-    hexLinesPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, hexLinesPositionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, hexBoard.lines, gl.DYNAMIC_DRAW);
-    hexLinesPositionBuffer.itemSize = 3;
-    hexLinesPositionBuffer.numItems = hexBoard.lines.length/3;
-
-    hexLinesColorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, hexLinesColorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, hexBoard.lineColors, gl.DYNAMIC_DRAW);
-    hexLinesPositionBuffer.itemSize = 3;
-    hexLinesPositionBuffer.numItems = hexBoard.lineColors.length/3;
-}
-
-function drawTriangle()
-{  
-    mvPushMatrix();
-
-    mat4.translate(mvMatrix, [player.pos.x, player.pos.y, 0.0]);
-    mat4.rotate(mvMatrix, player.rot * DEG2RAD, [0, 0, 1]);
-
-    gl.useProgram(shaderForeground);
-    gl.bindBuffer(gl.ARRAY_BUFFER, triVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderForeground.vertexPositionAttribute, triVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, triVertexTextureCoordBuffer);
-    gl.vertexAttribPointer(shaderForeground.textureCoordAttribute, triVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, triColorBuffer);
-    gl.vertexAttribPointer(shaderForeground.colorAttribute, triColorBuffer.itemSize, gl.FLOAT, false, 0, 0);    
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, backgroundTex);
-    gl.uniform1i(shaderForeground.samplerUniform, 0);
-
-    gl.uniformMatrix4fv(shaderForeground.pMatrixUniform, false, pMatrix);
-    gl.uniformMatrix4fv(shaderForeground.mvMatrixUniform, false, mvMatrix);
-    gl.drawArrays(gl.TRIANGLES, 0, triVertexPositionBuffer.numItems);
-    mvPopMatrix();   
-}
-
-function drawHexBoard()
-{  
-    mvPushMatrix();
-
-    mat4.translate(mvMatrix, [0, 0, -8.0]);
-
-    gl.useProgram(shaderForeground);
-    gl.bindBuffer(gl.ARRAY_BUFFER, hexVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderForeground.vertexPositionAttribute, hexVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, hexVertexTextureCoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, hexBoard.uvs, gl.DYNAMIC_DRAW);
-    gl.vertexAttribPointer(shaderForeground.textureCoordAttribute, hexVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, hexColorBuffer);
-    gl.vertexAttribPointer(shaderForeground.colorAttribute, hexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, backgroundTex);
-    gl.uniform1i(shaderForeground.samplerUniform, 0);
-
-    gl.uniformMatrix4fv(shaderForeground.pMatrixUniform, false, pMatrix);
-    gl.uniformMatrix4fv(shaderForeground.mvMatrixUniform, false, mvMatrix);
-    gl.drawArrays(gl.TRIANGLES, 0, hexVertexPositionBuffer.numItems);
-    mvPopMatrix();   
-
-    mvPushMatrix();
-    mat4.translate(mvMatrix, [0, 0, -8.5]);
-
-    gl.useProgram(shaderSolid);
-    gl.bindBuffer(gl.ARRAY_BUFFER, hexLinesPositionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, hexBoard.lines, gl.DYNAMIC_DRAW);
-    gl.vertexAttribPointer(shaderSolid.vertexPositionAttribute, hexLinesPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, hexLinesColorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, hexBoard.lineColors, gl.DYNAMIC_DRAW);
-    gl.vertexAttribPointer(shaderSolid.colorAttribute, hexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.uniformMatrix4fv(shaderSolid.pMatrixUniform, false, pMatrix);
-    gl.uniformMatrix4fv(shaderSolid.mvMatrixUniform, false, mvMatrix);
-    gl.drawArrays(gl.LINES, 0, hexLinesPositionBuffer.numItems);
-    mvPopMatrix();       
-}
-
-function drawBackground()
-{
-    mvPushMatrix();
-
-    mat4.translate(mvMatrix, [0.0, 0.0, -10.0]);
-
-    gl.useProgram(shaderBackground);
-    gl.bindBuffer(gl.ARRAY_BUFFER, sqrVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderBackground.vertexPositionAttribute, sqrVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, sqrVertexTextureCoordBuffer);
-    gl.vertexAttribPointer(shaderBackground.textureCoordAttribute, sqrVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, sqrColorBuffer);
-    gl.vertexAttribPointer(shaderForeground.colorAttribute, sqrColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, backgroundTex);
-    gl.uniform1i(shaderBackground.samplerUniform, 0);
-    gl.uniform1f(shaderBackground.alphaUniform, 1.0);
-
-    gl.uniformMatrix4fv(shaderBackground.pMatrixUniform, false, pMatrix);
-    gl.uniformMatrix4fv(shaderBackground.mvMatrixUniform, false, mvMatrix);
-
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, sqrVertexPositionBuffer.numItems);
-    mvPopMatrix();     
+    geometry.push(
+    {
+       vertexBuffer :  createGlBuffer(hexBoard.lines, 3, hexBoard.lines.length/3, gl.STATIC_DRAW),
+       colorBuffer :   createGlBuffer(hexBoard.lineColors, 4, hexBoard.lineColors.length/4, gl.DYNAMIC_DRAW),
+       textureBuffer : createGlBuffer(hexBoard.lineTexs, 2, hexBoard.lineTexs.length/2, gl.STATIC_DRAW),
+       vertexDynamic : null,
+       colorDynamic : hexBoard.colors,
+       textureDynamic : null,
+       translate : hexBoard.linePos,
+       rotate : null,
+       scale : null,
+       shader : shaderSolid,
+       primitive : gl.LINES
+    });
 }
 
 function drawScene() 
@@ -423,9 +307,68 @@ function drawScene()
     mat4.identity(mvMatrix);
     mat4.translate(mvMatrix, [0, 0, -14.0]);
 
-    drawBackground();
-    drawHexBoard();
-    drawTriangle();
+       mvPushMatrix();
+       var obj = geometry[2];
+
+       if (obj.translate) mat4.translate(mvMatrix, [obj.translate.x, obj.translate.y, obj.translate.z]);
+       if (obj.rotate) mat4.rotate(mvMatrix, obj.rotate.r * DEG2RAD, [0, 0, 1]);
+       if (obj.scale) mat4.scale(mvMatrix, [obj.scale.s, obj.scale.s, obj.scale.s]);
+
+gl.useProgram(obj.shader);
+      gl.bindBuffer(gl.ARRAY_BUFFER, obj.vertexBuffer);
+      // if (obj.vertexDynamic) gl.bufferData(gl.ARRAY_BUFFER, obj.vertexDynamic, gl.DYNAMIC_DRAW);
+       gl.vertexAttribPointer(obj.shader.vertexPositionAttribute, obj.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+       gl.bindBuffer(gl.ARRAY_BUFFER, obj.textureBuffer);
+       //if (obj.textureDynamic) gl.bufferData(gl.ARRAY_BUFFER, obj.textureDynamic, gl.DYNAMIC_DRAW);
+       gl.vertexAttribPointer(obj.shader.textureCoordAttribute, obj.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+       gl.bindBuffer(gl.ARRAY_BUFFER, obj.colorBuffer);
+      // if (obj.colorDynamic) gl.bufferData(gl.ARRAY_BUFFER, obj.colorDynamic, gl.DYNAMIC_DRAW);
+       gl.vertexAttribPointer(obj.shader.colorAttribute, obj.colorBuffer.itemSize, gl.FLOAT, false, 0, 0);    
+
+       gl.activeTexture(gl.TEXTURE0);
+       gl.bindTexture(gl.TEXTURE_2D, backgroundTex);
+       gl.uniform1i(obj.shader.samplerUniform, 0);
+
+       gl.uniformMatrix4fv(obj.shader.pMatrixUniform, false, pMatrix);
+       gl.uniformMatrix4fv(obj.shader.mvMatrixUniform, false, mvMatrix);
+       
+       gl.drawArrays(obj.primitive, 0, obj.vertexBuffer.numItems);
+       mvPopMatrix();
+    /*
+    geometry.forEach(function(obj) 
+    {
+       mvPushMatrix();
+      
+       if (obj.translate) mat4.translate(mvMatrix, [obj.translate.x, obj.translate.y, obj.translate.z]);
+       if (obj.rotate) mat4.rotate(mvMatrix, obj.rotate.r * DEG2RAD, [0, 0, 1]);
+       if (obj.scale) mat4.scale(mvMatrix, [obj.scale.s, obj.scale.s, obj.scale.s]);
+
+       gl.useProgram(obj.shader);
+
+       gl.bindBuffer(gl.ARRAY_BUFFER, obj.vertexBuffer);
+       if (obj.vertexDynamic) gl.bufferData(gl.ARRAY_BUFFER, obj.vertexDynamic, gl.DYNAMIC_DRAW);
+       gl.vertexAttribPointer(obj.shader.vertexPositionAttribute, obj.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+       gl.bindBuffer(gl.ARRAY_BUFFER, obj.textureBuffer);
+       if (obj.textureDynamic) gl.bufferData(gl.ARRAY_BUFFER, obj.textureDynamic, gl.DYNAMIC_DRAW);
+       gl.vertexAttribPointer(obj.shader.textureCoordAttribute, obj.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+       gl.bindBuffer(gl.ARRAY_BUFFER, obj.colorBuffer);
+       if (obj.colorDynamic) gl.bufferData(gl.ARRAY_BUFFER, obj.colorDynamic, gl.DYNAMIC_DRAW);
+       gl.vertexAttribPointer(obj.shader.colorAttribute, obj.colorBuffer.itemSize, gl.FLOAT, false, 0, 0);    
+
+       gl.activeTexture(gl.TEXTURE0);
+       gl.bindTexture(gl.TEXTURE_2D, backgroundTex);
+       gl.uniform1i(obj.shader.samplerUniform, 0);
+
+       gl.uniformMatrix4fv(obj.shader.pMatrixUniform, false, pMatrix);
+       gl.uniformMatrix4fv(obj.shader.mvMatrixUniform, false, mvMatrix);
+       
+       gl.drawArrays(obj.primitive, 0, obj.vertexBuffer.numItems);
+       mvPopMatrix();
+    });*/
 }
 
 function animate() 
@@ -454,6 +397,7 @@ function webGLStart()
     initBuffers();
     initTexture();
 
+
     var idx = Math.floor(Math.random() * hexBoard.numHex);
     player.placeInHex(idx);
 
@@ -469,7 +413,6 @@ function webGLStart()
     gl.disable(gl.DEPTH_TEST);    
 
     document.onkeydown = handleKeyDown;
-    document.onkeyup = handleKeyUp;
 
     tick();
 }

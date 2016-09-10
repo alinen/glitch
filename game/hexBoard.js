@@ -15,6 +15,13 @@ var NEIGHBOR = {
    S  : {value:4, dir:{x: 0.000, y:-1.000}, offset:{i:-2, j: 0} },
    SE : {value:5, dir:{x: 0.866, y:-0.500}, offset:{i:-1, j:-1} }
 };
+var NEIGHBORS = 
+   [NEIGHBOR.NE, 
+    NEIGHBOR.N, 
+    NEIGHBOR.NW, 
+    NEIGHBOR.SW, 
+    NEIGHBOR.S, 
+    NEIGHBOR.SE];
 
 class HexBoard
 {
@@ -23,14 +30,16 @@ class HexBoard
       this.b = hexSize; // see docs, length of hex size
       this.r = this.b / (2 * Math.tan(30 * DEG2RAD)); // see docs
       this.bRes = Math.sqrt(this.b * this.b - this.r * this.r); // see docs, extends b to edge of bounding square
-      this.uvs = []; // dynamic
+      this.uvs = []; // static
       this.vertices = [];  // static, kept for lookup, may become dynamic
-      this.colors = [];   // static, may become dynamic, should change when maze changes
-      this.lines = []; // dynamic, changes when maze changes
-      this.lineColors = []; // dynamic, changes when maze changes
+      this.colors = [];   // dynamic, should change when maze changes
+      this.lines = []; // mostly static, changes when maze changes
+      this.lineColors = []; // mostly static, changes when maze changes
       this.boardSize = boardSize;
 
-      this.scale = 1.0-margin;
+      this.gridPos = {x:0,y:0,z:-8.5};
+      this.linePos = {x:0,y:0,z:-8.0};
+      this.margin = 1.0-margin;
       this.numHex = 0;
       this.numRows = 2*(Math.floor(boardSize/this.r));
       this.numCols = Math.floor((2*(boardSize - this.b)/(this.b*3))+0.5);
@@ -74,17 +83,17 @@ class HexBoard
          {         
             for (var p = 0; p < this.shape.length; p+=3)
             {
-               vertexList.push(this.shape[p] * this.scale+x);
-               vertexList.push(this.shape[p+1] * this.scale+y);
+               vertexList.push(this.shape[p] * this.margin+x);
+               vertexList.push(this.shape[p+1] * this.margin+y);
                vertexList.push(this.shape[p+2]);
    
-               textureList.push((this.shape[p] * this.scale+x+10)/20.0);
-               textureList.push((this.shape[p+1] * this.scale+y+10)/20.0);
-               textureList.push(0.0); // 3rd component is alpha
+               textureList.push((this.shape[p] * this.margin+x+10)/20.0);
+               textureList.push((this.shape[p+1] * this.margin+y+10)/20.0);
    
                colorList.push(0.5);
                colorList.push(0.5);
                colorList.push(0.5);
+               colorList.push(0.0);
             }
             this.numHex++;
             x += 3 * this.b;
@@ -98,14 +107,14 @@ class HexBoard
 
       console.log("Init board: " + this.numRows + " " + this.numCols + " " + this.numHex);
 
-      this.maze = []; // ASN: What is the javascript way to init an array of type A and size N?
-      for (var i = 0; i < this.numHex; i++) this.maze.push(new MazeNode());
    }   
 
    computeMaze()
    {
-      for (var i = 0; i < this.maze.length; i++)
+      this.maze = []; // ASN: What is the javascript way to init an array of type A and size N?
+      for (var i = 0; i < this.numHex; i++)
       {
+         this.maze.push(new MazeNode());
          this.maze[i].visited = false;
          this.maze[i].neighbors = [];
       }
@@ -139,6 +148,7 @@ class HexBoard
 
       var vertexList = [];
       var colorList = [];
+      var texList = [];
       for (var idx = 0; idx < this.maze.length; idx++)
       {
          // draw lines between each node and it's neighbors
@@ -166,10 +176,18 @@ class HexBoard
             colorList.push(1);
             colorList.push(1);
             colorList.push(1);
+            colorList.push(1);
 
             colorList.push(1);
             colorList.push(1); 
             colorList.push(1); 
+            colorList.push(1); 
+
+            texList.push(0);
+            texList.push(0); 
+
+            texList.push(0);
+            texList.push(0); 
          }
       }
 
@@ -196,15 +214,24 @@ class HexBoard
             colorList.push(1);
             colorList.push(0);
             colorList.push(0);
+            colorList.push(1);
 
             colorList.push(0);
             colorList.push(0); 
             colorList.push(0); 
+            colorList.push(1); 
+
+            texList.push(0);
+            texList.push(0); 
+
+            texList.push(0);
+            texList.push(0); 
          }
       }     
 
       this.lines = new Float32Array(vertexList);
       this.lineColors = new Float32Array(colorList);
+      this.lineTexs = new Float32Array(texList);
    }
 
    shuffle(array) // Fisher–Yates_shuffle

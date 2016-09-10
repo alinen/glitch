@@ -1,66 +1,36 @@
-var fragmentShaderSource_SimpleTex = `
+var fragmentShaderSource_Tex = `
    precision mediump float;
-   varying vec3 vTextureCoord;
-   varying vec3 vColor;
+   varying vec2 vTextureCoord;
+   varying vec4 vColor;
    uniform sampler2D uSampler;
-
-   void main(void) 
-   {
-      gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-   }
-`;
-
-var fragmentShaderSource_SimpleBlend = `
-   precision mediump float;
-   varying vec3 vTextureCoord;
-   varying vec3 vColor;
-   uniform sampler2D uSampler;
-   uniform float uAlpha;
 
    void main(void) 
    {
       vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-      gl_FragColor = vec4(textureColor.rgb, textureColor.a * uAlpha);
+      gl_FragColor = vec4(textureColor.rgb * vColor.rgb, vColor.a);
    }
 `;
-
-var fragmentShaderSource_ForegroundBlend = `
-   precision mediump float;
-   varying vec3 vTextureCoord;
-   varying vec3 vColor;
-   uniform sampler2D uSampler;
-   uniform float uAlpha;
-
-   void main(void) 
-   {
-      vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y));
-      gl_FragColor = vec4(vColor * textureColor.rgb, textureColor.a * vTextureCoord.z);
-   }
-`;
-
 
 var fragmentShaderSource_Solid = `
    precision mediump float;
-   varying vec3 vTextureCoord;
-   varying vec3 vColor;
-   uniform sampler2D uSampler;
+   varying vec4 vColor;
 
    void main(void) 
    {
-      gl_FragColor = vec4(vColor,1.);
+      gl_FragColor = vColor;
    }
 `;
 
 // invert
-var fragmentShaderSource_InvertTex = `
+var fragmentShaderSource_TexInvert = `
    precision mediump float;
-   varying vec3 vTextureCoord;
-   varying vec3 vColor;
+   varying vec2 vTextureCoord;
+   varying vec4 vColor;
    uniform sampler2D uSampler;
 
     void main(void) 
     {
-        gl_FragColor = vec4(1,1,1,0) -  texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-        gl_FragColor.a = 1.0;
+        vec4 textureColor = vec4(1,1,1,1) - texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        gl_FragColor = vec4(textureColor.rgb * vColor.rgb, vColor.a);
     }
 `;
