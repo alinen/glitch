@@ -43,6 +43,7 @@ class HexBoard
       this.numHex = 0;
       this.numRows = 2*(Math.floor(boardSize/this.r));
       this.numCols = Math.floor((2*(boardSize - this.b)/(this.b*3))+0.5);
+      this.hexWidth = 3 * this.b * this.numCols;
 
       this.shape = [];
       var angle = 60.0 * DEG2RAD;
@@ -69,6 +70,10 @@ class HexBoard
       var textureList = [];
       var colorList = [];
 
+      var lVertexList = [];
+      var lTextureList = [];
+      var lColorList = [];      
+
       var startx = -this.boardSize;
       var y = -this.boardSize + this.r;
       for (var i = 0; i < this.numRows; i++)
@@ -90,11 +95,28 @@ class HexBoard
                textureList.push((this.shape[p] * this.margin+x+this.boardSize)/(2*this.boardSize));
                textureList.push((this.shape[p+1] * this.margin+y+this.boardSize)/(2*this.boardSize));
    
-               colorList.push(1.0);
-               colorList.push(0.0);
-               colorList.push(0.0);
-               colorList.push(0.2);
+               colorList.push(0.1);
+               colorList.push(0.1);
+               colorList.push(0.1);
+               colorList.push(0.5);
             }
+
+            for (var p = 0; p < this.shape.length; p+=3)
+            {
+               if (p % 9 == 0) continue; // skip middle point
+
+               lVertexList.push(this.shape[p] * 0.95 + x);
+               lVertexList.push(this.shape[p+1] * 0.95 + y);
+               lVertexList.push(this.shape[p+2]);
+  
+               lColorList.push(1.0);
+               lColorList.push(1.0);
+               lColorList.push(1.0);
+               lColorList.push(0);
+
+               lTextureList.push(0);
+               lTextureList.push(0); 
+            }            
             this.numHex++;
             x += 3 * this.b;
          }
@@ -105,34 +127,12 @@ class HexBoard
       this.colors = new Float32Array(colorList);
       this.uvs = new Float32Array(textureList);
 
+      this.lines = new Float32Array(lVertexList);
+      this.lineColors = new Float32Array(lColorList);
+      this.lineTexs = new Float32Array(lTextureList);            
+
       console.log("Init board: " + this.numRows + " " + this.numCols + " " + this.numHex);
-
-      vertexList = [];
-      colorList = [];
-      textureList = [];
-      for (var idx = 0; idx < this.numHex; idx++)
-      {
-         // draw lines between each node and it's neighbors
-         var sides = this.getHexSidesById(idx);
-
-         for (var s = 0; s < sides.length; s++)
-         {
-            var p1 = sides[s];
-
-            vertexList.push(p1.x);
-            vertexList.push(p1.y);
-            vertexList.push(0.0);
-  
-            colorList.push(1.0);
-            colorList.push(1.0);
-            colorList.push(1.0);
-            colorList.push(0);
-
-            textureList.push(0);
-            textureList.push(0); 
-         }
-      }
-
+/*
       for (var idx = 0; idx < this.numHex; idx++)
       {
          // draw lines between each node and it's neighbors
@@ -168,10 +168,8 @@ class HexBoard
             textureList.push(0); 
          }
       }     
+*/
 
-      this.lines = new Float32Array(vertexList);
-      this.lineColors = new Float32Array(colorList);
-      this.lineTexs = new Float32Array(textureList);      
    }   
 
    computeMaze()
@@ -210,32 +208,7 @@ class HexBoard
             }
          }
       }
-/*
-      for (var idx = 0; idx < this.maze.length; idx++)
-      {
-         // draw lines between each node and it's neighbors
-         var node = this.maze[idx];
 
-         for (var s = 0; s < NEIGHBORS.length; s++)        
-         {
-            var neighborIdx = this.getNeighborId(idx, NEIGHBORS[s]);
-            var sideOffset = (idx * 6 + s) * 2 * 4;
-            //var pathOffset = ((this.numHex + idx) * 6 + s) * 2 * 4;
-//            console.log( NEIGHBORS[s].dir.x+" "+ NEIGHBORS[s].dir.y+" "+neighborIdx+" "+sideOffset+" "+pathOffset+" "+node.neighbors);
-
-            if (neighborIdx !== -1 && this.isNeighbor(idx, neighborIdx, node.neighbors))
-            {
-               this.lineColors[sideOffset+0+3] = 0;
-               this.lineColors[sideOffset+4+3] = 0;
-            }
-            else
-            {
-               this.lineColors[sideOffset+0+3] = 1;
-               this.lineColors[sideOffset+4+3] = 1;
-            }
-         }
-      }
-      */
    }
 
    shuffle(array) // Fisher–Yates_shuffle

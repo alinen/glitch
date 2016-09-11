@@ -17,7 +17,11 @@ var geometry = [];
 var worldSize = 10.0;
 var lastTime = 0;
 var player = new Player();
-var hexBoard = new HexBoard(1.0, worldSize, 0.05);
+var hexBoard = new HexBoard(1.0, worldSize, 0.1);
+var left = -worldSize;
+var right = worldSize;
+var bottom =  -worldSize;
+var up = worldSize;
 
 function initGL(canvas) 
 {
@@ -267,6 +271,11 @@ function initBuffers()
     //--
     hexBoard.initBoard();
     hexBoard.computeMaze();
+    left = -worldSize+hexBoard.bRes;
+    right = -worldSize+hexBoard.hexWidth;
+    bottom =  -worldSize + hexBoard.r; 
+    up =  worldSize - hexBoard.r;
+
     geometry.push(
     {
        vertexBuffer :  createGlBuffer(hexBoard.vertices, 3, hexBoard.vertices.length/3, gl.STATIC_DRAW),
@@ -302,8 +311,8 @@ function drawScene()
 {
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    mat4.ortho(-10, 10, -10, 10, 0.1, 100, pMatrix);
+    
+    mat4.ortho(left, right, bottom, up, 0.1, 100, pMatrix);
     mat4.identity(mvMatrix);
 
     geometry.forEach(function(obj) 

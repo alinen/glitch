@@ -59,7 +59,7 @@ class Player
             this.targetHex = this.nextHex;
             this.nextHex = -1;
             this.pos = target;
-            console.log("update "+this.currentHex+" "+this.targetHex+" "+this.nextHex);
+            //console.log("update "+this.currentHex+" "+this.targetHex+" "+this.nextHex);
          }
 
       }
@@ -75,7 +75,7 @@ class Player
 
    attemptMove(move)
    {
-      console.log("attepmptMove "+this.currentHex);
+      //console.log("attepmptMove "+this.currentHex);
       if (!this.isMoving())
       {
          var nextIdx = hexBoard.isValidMove(this.currentHex, move);         
