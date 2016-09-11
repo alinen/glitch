@@ -210,7 +210,7 @@ class HexBoard
             }
          }
       }
-
+/*
       for (var idx = 0; idx < this.maze.length; idx++)
       {
          // draw lines between each node and it's neighbors
@@ -235,6 +235,7 @@ class HexBoard
             }
          }
       }
+      */
    }
 
    shuffle(array) // Fisher–Yates_shuffle
@@ -314,13 +315,33 @@ class HexBoard
       return neighbors;
    }
 
-   setHexAlphaById(idx, alpha)
+   showHexById(idx, alpha)
    {
-      var offset = idx * this.numHexPts;
-      for (var i = 0; i < this.numHexPts; i += 3)
+      var offset = idx * 18 * 4;
+      for (var i = 0; i < 18; i++)
       {
-         this.uvs[offset+i+2] = alpha;
+         this.colors[offset+i*4+3] = alpha;
       } 
+
+      var node = this.maze[idx];
+      for (var s = 0; s < NEIGHBORS.length; s++)        
+      {
+         var neighborIdx = this.getNeighborId(idx, NEIGHBORS[s]);
+         var sideOffset = (idx * 6 + s) * 2 * 4;
+         //var pathOffset = ((this.numHex + idx) * 6 + s) * 2 * 4;
+//       console.log( NEIGHBORS[s].dir.x+" "+ NEIGHBORS[s].dir.y+" "+neighborIdx+" "+sideOffset+" "+pathOffset+" "+node.neighbors);
+
+         if (neighborIdx === -1 || this.isNeighbor(idx, neighborIdx, node.neighbors))
+         {
+            this.lineColors[sideOffset+0+3] = 0;
+            this.lineColors[sideOffset+4+3] = 0;
+         }
+         else
+         {
+            this.lineColors[sideOffset+0+3] = 1;
+            this.lineColors[sideOffset+4+3] = 1;
+         }
+      }      
    }
 
    getHexCenterById(idx)

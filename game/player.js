@@ -18,7 +18,7 @@ class Player
    placeInHex(hexIdx)
    {
       this.pos = hexBoard.getHexCenterById(hexIdx);
-      hexBoard.setHexAlphaById(hexIdx, 0.95);
+      hexBoard.showHexById(hexIdx, 0.95);
       console.log("place player: " + this.pos.x + " " + this.pos.y + " id: " + hexIdx);
    
       this.dir = {x:0,y:0};
@@ -27,7 +27,7 @@ class Player
       this.currentHex = hexIdx;
       this.targetHex = -1;
       this.nextHex = -1;
-      this.scale.s = hexBoard.b * 0.5;
+      this.scale.s = hexBoard.b * 0.25;
    }   
 
    passedTarget(targetPos, threshold)
@@ -51,7 +51,7 @@ class Player
          var target = hexBoard.getHexCenterById(this.targetHex);
          if (this.passedTarget(target, 0.01))
          {
-            hexBoard.setHexAlphaById(this.targetHex, 1.0);
+            hexBoard.showHexById(this.targetHex, 1.0);
    
             this.dir = this.nextDir;
             this.nextDir = {x:0,y:0};
