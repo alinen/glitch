@@ -275,10 +275,10 @@ function initBuffers()
        vertexDynamic : null,
        colorDynamic : hexBoard.colors,
        textureDynamic : null,
-       translate : null,
+       translate : hexBoard.gridPos,
        rotate : null,
        scale : null,
-       shader : shaderTex, // ASN: Use tex invert or similar
+       shader : shaderSolid,
        primitive : gl.TRIANGLES
     });    
 
@@ -290,7 +290,7 @@ function initBuffers()
        vertexDynamic : null,
        colorDynamic : hexBoard.lineColors,
        textureDynamic : null,
-       translate : null,
+       translate : hexBoard.linePos,
        rotate : null,
        scale : null,
        shader : shaderSolid,
@@ -305,13 +305,12 @@ function drawScene()
 
     mat4.ortho(-10, 10, -10, 10, 0.1, 100, pMatrix);
     mat4.identity(mvMatrix);
-    mat4.translate(mvMatrix, [0, 0, -14.0]);
 
     geometry.forEach(function(obj) 
     {
        mvPushMatrix();
       
-       if (obj.translate) mat4.translate(mvMatrix, [obj.translate.x, obj.translate.y, 0]);
+       if (obj.translate) mat4.translate(mvMatrix, [obj.translate.x, obj.translate.y, obj.translate.z]);
        if (obj.rotate) mat4.rotate(mvMatrix, obj.rotate.r * DEG2RAD, [0, 0, 1]);
        if (obj.scale) mat4.scale(mvMatrix, [obj.scale.s, obj.scale.s, obj.scale.s]);
 
@@ -366,7 +365,6 @@ function webGLStart()
     initBuffers();
     initTexture();
 
-
     var idx = Math.floor(Math.random() * hexBoard.numHex);
     player.placeInHex(idx);
 
@@ -376,8 +374,9 @@ function webGLStart()
     //console.log("TEST "+idx+" "+p1+" "+idx2+" "+p2);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); //gl.ONE);
-    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.enable(gl.BLEND);   
+    gl.enable(gl.DEPTH_TEST);   
 
     document.onkeydown = handleKeyDown;
 

@@ -11,9 +11,9 @@ var NEIGHBOR = {
    NE : {value:0, dir:{x: 0.866, y: 0.500}, offset:{i: 1, j: 1} },
    N  : {value:1, dir:{x: 0.000, y: 1.000}, offset:{i: 2, j: 0} },
    NW : {value:2, dir:{x:-0.866, y: 0.500}, offset:{i: 1, j:-1} },
-   SW : {value:3, dir:{x:-0.866, y:-0.500}, offset:{i:-1, j: 1} },
+   SW : {value:3, dir:{x:-0.866, y:-0.500}, offset:{i:-1, j:-1} },
    S  : {value:4, dir:{x: 0.000, y:-1.000}, offset:{i:-2, j: 0} },
-   SE : {value:5, dir:{x: 0.866, y:-0.500}, offset:{i:-1, j:-1} }
+   SE : {value:5, dir:{x: 0.866, y:-0.500}, offset:{i:-1, j: 1} }
 };
 var NEIGHBORS = 
    [NEIGHBOR.NE, 
@@ -37,6 +37,8 @@ class HexBoard
       this.lineColors = []; // mostly static, changes when maze changes
       this.boardSize = boardSize;
 
+      this.gridPos = {x:0,y:0,z:-8};
+      this.linePos = {x:0,y:0,z:-7};
       this.margin = 1.0-margin;
       this.numHex = 0;
       this.numRows = 2*(Math.floor(boardSize/this.r));
@@ -88,10 +90,10 @@ class HexBoard
                textureList.push((this.shape[p] * this.margin+x+this.boardSize)/(2*this.boardSize));
                textureList.push((this.shape[p+1] * this.margin+y+this.boardSize)/(2*this.boardSize));
    
-               colorList.push(0.5);
-               colorList.push(0.5);
-               colorList.push(0.5);
                colorList.push(1.0);
+               colorList.push(0.0);
+               colorList.push(0.0);
+               colorList.push(0.2);
             }
             this.numHex++;
             x += 3 * this.b;
@@ -121,10 +123,10 @@ class HexBoard
             vertexList.push(p1.y);
             vertexList.push(0.0);
   
+            colorList.push(1.0);
+            colorList.push(1.0);
+            colorList.push(1.0);
             colorList.push(0);
-            colorList.push(0);
-            colorList.push(0);
-            colorList.push(1);
 
             textureList.push(0);
             textureList.push(0); 
@@ -134,30 +136,30 @@ class HexBoard
       for (var idx = 0; idx < this.numHex; idx++)
       {
          // draw lines between each node and it's neighbors
-         var p1 = this.getHexCenterById(idx);
-         var neighbors = this.getNeighbors(idx);
-         for (var n = 0; n < neighbors.length; n++)
+         var p = this.getHexCenterById(idx);         
+         for (var n = 0; n < NEIGHBORS.length; n++)
          {
-            var neighbor = neighbors[n];
-            var p2 = this.getHexCenterById(neighbor);
-            //console.log(neighbor + " "+p1.x+" "+p1.y+" "+p2.x+" "+p2.y);
-            vertexList.push(p1.x);
-            vertexList.push(p1.y);
+            var x = p.x + NEIGHBORS[n].dir.x * this.r * 2;
+            var y = p.y + NEIGHBORS[n].dir.y * this.r * 2;
+
+            //
+            vertexList.push(p.x);
+            vertexList.push(p.y);
             vertexList.push(0.0);
   
-            vertexList.push(p2.x);
-            vertexList.push(p2.y);
+            vertexList.push(x);
+            vertexList.push(y);
             vertexList.push(0.0);
 
             colorList.push(1);
-            colorList.push(0);
-            colorList.push(0);
             colorList.push(1);
+            colorList.push(1);
+            colorList.push(0);
 
             colorList.push(1);
-            colorList.push(0); 
-            colorList.push(0); 
             colorList.push(1); 
+            colorList.push(1); 
+            colorList.push(0);
 
             textureList.push(0);
             textureList.push(0); 
@@ -208,37 +210,31 @@ class HexBoard
             }
          }
       }
-/*
+
       for (var idx = 0; idx < this.maze.length; idx++)
       {
          // draw lines between each node and it's neighbors
          var node = this.maze[idx];
 
-         for (var s = 0; s < NEIGHBORS.length; s++)
+         for (var s = 0; s < NEIGHBORS.length; s++)        
          {
             var neighborIdx = this.getNeighborId(idx, NEIGHBORS[s]);
-            var sideOffset = (idx * 6 + s * 2) * 4;
-            var pathOffset = ((this.numHex + idx) * 6 + s * 2) * 4;
+            var sideOffset = (idx * 6 + s) * 2 * 4;
+            //var pathOffset = ((this.numHex + idx) * 6 + s) * 2 * 4;
+//            console.log( NEIGHBORS[s].dir.x+" "+ NEIGHBORS[s].dir.y+" "+neighborIdx+" "+sideOffset+" "+pathOffset+" "+node.neighbors);
 
-            if (this.isNeighbor(idx, neighborIdx, node.neighbors))
+            if (neighborIdx !== -1 && this.isNeighbor(idx, neighborIdx, node.neighbors))
             {
-               this.lineColors[sideOffset+0+3] = 1;
-               this.lineColors[sideOffset+1+3] = 1;
-
-               this.lineColors[pathOffset+0+3] = 1;
-               this.lineColors[pathOffset+1+3] = 1;
+               this.lineColors[sideOffset+0+3] = 0;
+               this.lineColors[sideOffset+4+3] = 0;
             }
             else
             {
-               this.lineColors[sideOffset+0+3] = 0;
-               this.lineColors[sideOffset+1+3] = 0;
-
-               this.lineColors[pathOffset+0+3] = 0;
-               this.lineColors[pathOffset+1+3] = 0;
+               this.lineColors[sideOffset+0+3] = 1;
+               this.lineColors[sideOffset+4+3] = 1;
             }
          }
       }
-      */
    }
 
    shuffle(array) // Fisher–Yates_shuffle
@@ -254,8 +250,6 @@ class HexBoard
 
    isNeighbor(idx, neighborIdx, neighbors)
    {
-      if (!this.isValidHex(neighborIdx)) return false;
-
       for (var i = 0; i < neighbors.length; i++)
       {
          if (neighbors[i] === neighborIdx) return true;
@@ -289,7 +283,11 @@ class HexBoard
       var cell = this.idToCell(idx);
       var i = cell.i + side.offset.i; 
       var j = cell.j + side.offset.j; 
-      return this.cellToId({i:i, j:j});
+      if (this.isValidHex({i:i, j:j}))
+      {
+         return this.cellToId({i:i, j:j});
+      }
+      return -1;
    }
 
    getNeighbors(idx)
@@ -335,10 +333,10 @@ class HexBoard
 
    isValidMove(idx, dir)
    {
-      console.log("isValidMove "+idx + " "+dir);
+      //console.log("isValidMove "+idx + " "+dir);
       var node = this.maze[idx];
-      var neighborIdx = this.getNeighborId(idx, dir.value);
-      for (var i = 0; i < node.neighbors.length; i++)
+      var neighborIdx = this.getNeighborId(idx, dir);
+      for (var i = 0; neighborIdx !== -1 && i < node.neighbors.length; i++)
       {
          if (neighborIdx === node.neighbors[i]) return neighborIdx;
       }

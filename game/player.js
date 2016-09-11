@@ -5,7 +5,7 @@ class Player
    {
       this.speed = 0.005;
       this.pos = {x:0, y:0};
-      this.translate = {x:0,y:0,z:0},
+      this.translate = {x:0,y:0,z:-5},
       this.scale = {s:1},
       this.rot = {r:0},
       this.dir = {x:0, y:0};
