@@ -267,7 +267,7 @@ function initBuffers()
     //--
     hexBoard.initBoard();
     hexBoard.computeMaze();
-/*    geometry.push(
+    geometry.push(
     {
        vertexBuffer :  createGlBuffer(hexBoard.vertices, 3, hexBoard.vertices.length/3, gl.STATIC_DRAW),
        colorBuffer :   createGlBuffer(hexBoard.colors, 4, hexBoard.colors.length/4, gl.DYNAMIC_DRAW),
@@ -275,13 +275,13 @@ function initBuffers()
        vertexDynamic : null,
        colorDynamic : hexBoard.colors,
        textureDynamic : null,
-       translate : hexBoard.gridPos,
+       translate : null,
        rotate : null,
        scale : null,
        shader : shaderTex, // ASN: Use tex invert or similar
        primitive : gl.TRIANGLES
     });    
-*/
+
     geometry.push(
     {
        vertexBuffer :  createGlBuffer(hexBoard.lines, 3, hexBoard.lines.length/3, gl.STATIC_DRAW),
@@ -290,7 +290,7 @@ function initBuffers()
        vertexDynamic : null,
        colorDynamic : hexBoard.lineColors,
        textureDynamic : null,
-       translate : hexBoard.linePos,
+       translate : null,
        rotate : null,
        scale : null,
        shader : shaderSolid,
@@ -311,7 +311,7 @@ function drawScene()
     {
        mvPushMatrix();
       
-       if (obj.translate) mat4.translate(mvMatrix, [obj.translate.x, obj.translate.y, obj.translate.z]);
+       if (obj.translate) mat4.translate(mvMatrix, [obj.translate.x, obj.translate.y, 0]);
        if (obj.rotate) mat4.rotate(mvMatrix, obj.rotate.r * DEG2RAD, [0, 0, 1]);
        if (obj.scale) mat4.scale(mvMatrix, [obj.scale.s, obj.scale.s, obj.scale.s]);
 
@@ -376,10 +376,8 @@ function webGLStart()
     //console.log("TEST "+idx+" "+p1+" "+idx2+" "+p2);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.enable(gl.DEPTH_TEST);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); //gl.ONE);
     gl.enable(gl.BLEND);
-    gl.disable(gl.DEPTH_TEST);    
 
     document.onkeydown = handleKeyDown;
 

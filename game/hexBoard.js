@@ -37,8 +37,6 @@ class HexBoard
       this.lineColors = []; // mostly static, changes when maze changes
       this.boardSize = boardSize;
 
-      this.gridPos = {x:0,y:0,z:-8.5};
-      this.linePos = {x:0,y:0,z:-8.0};
       this.margin = 1.0-margin;
       this.numHex = 0;
       this.numRows = 2*(Math.floor(boardSize/this.r));
@@ -107,6 +105,71 @@ class HexBoard
 
       console.log("Init board: " + this.numRows + " " + this.numCols + " " + this.numHex);
 
+      vertexList = [];
+      colorList = [];
+      textureList = [];
+      for (var idx = 0; idx < this.numHex; idx++)
+      {
+         // draw lines between each node and it's neighbors
+         var sides = this.getHexSidesById(idx);
+
+         for (var s = 0; s < sides.length; s++)
+         {
+            var p1 = sides[s];
+
+            vertexList.push(p1.x);
+            vertexList.push(p1.y);
+            vertexList.push(0.0);
+  
+            colorList.push(0);
+            colorList.push(0);
+            colorList.push(0);
+            colorList.push(1);
+
+            textureList.push(0);
+            textureList.push(0); 
+         }
+      }
+
+      for (var idx = 0; idx < this.numHex; idx++)
+      {
+         // draw lines between each node and it's neighbors
+         var p1 = this.getHexCenterById(idx);
+         var neighbors = this.getNeighbors(idx);
+         for (var n = 0; n < neighbors.length; n++)
+         {
+            var neighbor = neighbors[n];
+            var p2 = this.getHexCenterById(neighbor);
+            //console.log(neighbor + " "+p1.x+" "+p1.y+" "+p2.x+" "+p2.y);
+            vertexList.push(p1.x);
+            vertexList.push(p1.y);
+            vertexList.push(0.0);
+  
+            vertexList.push(p2.x);
+            vertexList.push(p2.y);
+            vertexList.push(0.0);
+
+            colorList.push(1);
+            colorList.push(0);
+            colorList.push(0);
+            colorList.push(1);
+
+            colorList.push(1);
+            colorList.push(0); 
+            colorList.push(0); 
+            colorList.push(1); 
+
+            textureList.push(0);
+            textureList.push(0); 
+
+            textureList.push(0);
+            textureList.push(0); 
+         }
+      }     
+
+      this.lines = new Float32Array(vertexList);
+      this.lineColors = new Float32Array(colorList);
+      this.lineTexs = new Float32Array(textureList);      
    }   
 
    computeMaze()
@@ -145,93 +208,37 @@ class HexBoard
             }
          }
       }
-
-      var vertexList = [];
-      var colorList = [];
-      var texList = [];
+/*
       for (var idx = 0; idx < this.maze.length; idx++)
       {
          // draw lines between each node and it's neighbors
          var node = this.maze[idx];
-         var sides = this.getHexSidesById(idx);
 
-         for (var s = 0; s < sides.length; s += 2)
+         for (var s = 0; s < NEIGHBORS.length; s++)
          {
-            if (this.isNeighborSide(idx, s/2.0, node.neighbors))
+            var neighborIdx = this.getNeighborId(idx, NEIGHBORS[s]);
+            var sideOffset = (idx * 6 + s * 2) * 4;
+            var pathOffset = ((this.numHex + idx) * 6 + s * 2) * 4;
+
+            if (this.isNeighbor(idx, neighborIdx, node.neighbors))
             {
-               continue;
+               this.lineColors[sideOffset+0+3] = 1;
+               this.lineColors[sideOffset+1+3] = 1;
+
+               this.lineColors[pathOffset+0+3] = 1;
+               this.lineColors[pathOffset+1+3] = 1;
             }
+            else
+            {
+               this.lineColors[sideOffset+0+3] = 0;
+               this.lineColors[sideOffset+1+3] = 0;
 
-            var p1 = sides[s];
-            var p2 = sides[s+1];
-
-            vertexList.push(p1.x);
-            vertexList.push(p1.y);
-            vertexList.push(0.0);
-  
-            vertexList.push(p2.x);
-            vertexList.push(p2.y);
-            vertexList.push(0.0);
-
-            colorList.push(1);
-            colorList.push(1);
-            colorList.push(1);
-            colorList.push(1);
-
-            colorList.push(1);
-            colorList.push(1); 
-            colorList.push(1); 
-            colorList.push(1); 
-
-            texList.push(0);
-            texList.push(0); 
-
-            texList.push(0);
-            texList.push(0); 
+               this.lineColors[pathOffset+0+3] = 0;
+               this.lineColors[pathOffset+1+3] = 0;
+            }
          }
       }
-
-      for (var i = 0; i < this.maze.length; i++)
-      {
-         // draw lines between each node and it's neighbors
-         var node = this.maze[i];
-         var p1 = this.getHexCenterById(i);
-
-         //console.log(node.neighbors);
-         for (var n = 0; n < node.neighbors.length; n++)
-         {
-            var neighbor = node.neighbors[n];
-            var p2 = this.getHexCenterById(neighbor);
-            //console.log(neighbor + " "+p1.x+" "+p1.y+" "+p2.x+" "+p2.y);
-            vertexList.push(p1.x);
-            vertexList.push(p1.y);
-            vertexList.push(0.0);
-  
-            vertexList.push(p2.x);
-            vertexList.push(p2.y);
-            vertexList.push(0.0);
-
-            colorList.push(1);
-            colorList.push(0);
-            colorList.push(0);
-            colorList.push(1);
-
-            colorList.push(0);
-            colorList.push(0); 
-            colorList.push(0); 
-            colorList.push(1); 
-
-            texList.push(0);
-            texList.push(0); 
-
-            texList.push(0);
-            texList.push(0); 
-         }
-      }     
-
-      this.lines = new Float32Array(vertexList);
-      this.lineColors = new Float32Array(colorList);
-      this.lineTexs = new Float32Array(texList);
+      */
    }
 
    shuffle(array) // Fisher–Yates_shuffle
@@ -245,9 +252,8 @@ class HexBoard
       }
    }
 
-   isNeighborSide(idx, sideIdx, neighbors)
+   isNeighbor(idx, neighborIdx, neighbors)
    {
-      var neighborIdx = this.getNeighborId(idx, sideIdx);
       if (!this.isValidHex(neighborIdx)) return false;
 
       for (var i = 0; i < neighbors.length; i++)
@@ -280,14 +286,10 @@ class HexBoard
 
    getNeighborId(idx, side)
    {
-      var cell = this.idToCell(idx); 
-      if (side === NEIGHBOR.NE.value) return this.cellToId({i: cell.i+1, j: cell.j+1});
-      else if (side === NEIGHBOR.N.value) return this.cellToId({i: cell.i+2, j: cell.j});
-      else if (side === NEIGHBOR.NW.value) return this.cellToId({i: cell.i+1, j: cell.j-1});
-      else if (side === NEIGHBOR.SW.value) return this.cellToId({i: cell.i-1, j: cell.j-1});
-      else if (side === NEIGHBOR.S.value) return this.cellToId({i: cell.i-2, j: cell.j});
-      else if (side === NEIGHBOR.SE.value) return this.cellToId({i: cell.i-1, j: cell.j+1});
-      return -1;
+      var cell = this.idToCell(idx);
+      var i = cell.i + side.offset.i; 
+      var j = cell.j + side.offset.j; 
+      return this.cellToId({i:i, j:j});
    }
 
    getNeighbors(idx)
