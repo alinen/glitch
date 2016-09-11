@@ -87,13 +87,13 @@ class HexBoard
                vertexList.push(this.shape[p+1] * this.margin+y);
                vertexList.push(this.shape[p+2]);
    
-               textureList.push((this.shape[p] * this.margin+x+10)/20.0);
-               textureList.push((this.shape[p+1] * this.margin+y+10)/20.0);
+               textureList.push((this.shape[p] * this.margin+x+this.boardSize)/(2*this.boardSize));
+               textureList.push((this.shape[p+1] * this.margin+y+this.boardSize)/(2*this.boardSize));
    
                colorList.push(0.5);
                colorList.push(0.5);
                colorList.push(0.5);
-               colorList.push(0.0);
+               colorList.push(1.0);
             }
             this.numHex++;
             x += 3 * this.b;

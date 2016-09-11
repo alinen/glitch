@@ -216,6 +216,7 @@ function initBuffers()
          0.0, 0.0
     ];
 
+    
     geometry.push(
     {
        vertexBuffer :  createGlBuffer(new Float32Array(sVertices), 3, 4, gl.STATIC_DRAW),
@@ -266,8 +267,7 @@ function initBuffers()
     //--
     hexBoard.initBoard();
     hexBoard.computeMaze();
-
-    geometry.push(
+/*    geometry.push(
     {
        vertexBuffer :  createGlBuffer(hexBoard.vertices, 3, hexBoard.vertices.length/3, gl.STATIC_DRAW),
        colorBuffer :   createGlBuffer(hexBoard.colors, 4, hexBoard.colors.length/4, gl.DYNAMIC_DRAW),
@@ -281,14 +281,14 @@ function initBuffers()
        shader : shaderTex, // ASN: Use tex invert or similar
        primitive : gl.TRIANGLES
     });    
-
+*/
     geometry.push(
     {
        vertexBuffer :  createGlBuffer(hexBoard.lines, 3, hexBoard.lines.length/3, gl.STATIC_DRAW),
        colorBuffer :   createGlBuffer(hexBoard.lineColors, 4, hexBoard.lineColors.length/4, gl.DYNAMIC_DRAW),
        textureBuffer : createGlBuffer(hexBoard.lineTexs, 2, hexBoard.lineTexs.length/2, gl.STATIC_DRAW),
        vertexDynamic : null,
-       colorDynamic : hexBoard.colors,
+       colorDynamic : hexBoard.lineColors,
        textureDynamic : null,
        translate : hexBoard.linePos,
        rotate : null,
@@ -307,36 +307,6 @@ function drawScene()
     mat4.identity(mvMatrix);
     mat4.translate(mvMatrix, [0, 0, -14.0]);
 
-       mvPushMatrix();
-       var obj = geometry[2];
-
-       if (obj.translate) mat4.translate(mvMatrix, [obj.translate.x, obj.translate.y, obj.translate.z]);
-       if (obj.rotate) mat4.rotate(mvMatrix, obj.rotate.r * DEG2RAD, [0, 0, 1]);
-       if (obj.scale) mat4.scale(mvMatrix, [obj.scale.s, obj.scale.s, obj.scale.s]);
-
-gl.useProgram(obj.shader);
-      gl.bindBuffer(gl.ARRAY_BUFFER, obj.vertexBuffer);
-      // if (obj.vertexDynamic) gl.bufferData(gl.ARRAY_BUFFER, obj.vertexDynamic, gl.DYNAMIC_DRAW);
-       gl.vertexAttribPointer(obj.shader.vertexPositionAttribute, obj.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-       gl.bindBuffer(gl.ARRAY_BUFFER, obj.textureBuffer);
-       //if (obj.textureDynamic) gl.bufferData(gl.ARRAY_BUFFER, obj.textureDynamic, gl.DYNAMIC_DRAW);
-       gl.vertexAttribPointer(obj.shader.textureCoordAttribute, obj.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-       gl.bindBuffer(gl.ARRAY_BUFFER, obj.colorBuffer);
-      // if (obj.colorDynamic) gl.bufferData(gl.ARRAY_BUFFER, obj.colorDynamic, gl.DYNAMIC_DRAW);
-       gl.vertexAttribPointer(obj.shader.colorAttribute, obj.colorBuffer.itemSize, gl.FLOAT, false, 0, 0);    
-
-       gl.activeTexture(gl.TEXTURE0);
-       gl.bindTexture(gl.TEXTURE_2D, backgroundTex);
-       gl.uniform1i(obj.shader.samplerUniform, 0);
-
-       gl.uniformMatrix4fv(obj.shader.pMatrixUniform, false, pMatrix);
-       gl.uniformMatrix4fv(obj.shader.mvMatrixUniform, false, mvMatrix);
-       
-       gl.drawArrays(obj.primitive, 0, obj.vertexBuffer.numItems);
-       mvPopMatrix();
-    /*
     geometry.forEach(function(obj) 
     {
        mvPushMatrix();
@@ -346,7 +316,6 @@ gl.useProgram(obj.shader);
        if (obj.scale) mat4.scale(mvMatrix, [obj.scale.s, obj.scale.s, obj.scale.s]);
 
        gl.useProgram(obj.shader);
-
        gl.bindBuffer(gl.ARRAY_BUFFER, obj.vertexBuffer);
        if (obj.vertexDynamic) gl.bufferData(gl.ARRAY_BUFFER, obj.vertexDynamic, gl.DYNAMIC_DRAW);
        gl.vertexAttribPointer(obj.shader.vertexPositionAttribute, obj.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -368,7 +337,7 @@ gl.useProgram(obj.shader);
        
        gl.drawArrays(obj.primitive, 0, obj.vertexBuffer.numItems);
        mvPopMatrix();
-    });*/
+    });
 }
 
 function animate() 
