@@ -478,7 +478,7 @@ function webGLStart()
     //console.log("TEST "+idx+" "+p1+" "+idx2+" "+p2);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); // 
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE); //gl.ONE_MINUS_SRC_ALPHA); // 
     gl.enable(gl.BLEND);   
     gl.enable(gl.DEPTH_TEST);   
 
