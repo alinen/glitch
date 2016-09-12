@@ -26,6 +26,8 @@ var geometry = [];
 var objects = [];
 
 // game state
+var lastMouseX = null;
+var lastMouseY = null;
 var worldSize = 10.0;
 var lastTime = 0;
 var player = new Player();
@@ -191,6 +193,21 @@ function mvPopMatrix()
         throw "Invalid popMatrix!";
     }
     mvMatrix = mvMatrixStack.pop();
+}
+
+function handleMouseMove(event)
+{
+    var canvas = document.getElementById("game-canvas");
+    var rect = canvas.getBoundingClientRect();
+    var x = event.clientX - rect.left;
+    var y = event.clientY - rect.top;
+
+    var sceneX = (x * worldSize * 2.0)/canvas.width - worldSize;
+    var sceneY = worldSize - (y * worldSize * 2.0)/canvas.height;
+    //console.log(sceneX+" "+sceneY);
+
+    lastMouseX = sceneX;
+    lastMouseY = sceneY;
 }
 
 function handleKeyDown(event) 
@@ -374,9 +391,7 @@ function initObjects()
           var npc = new NPC(item.respawnTime);
 
           var idx = Math.floor(Math.random() * hexBoard.numHex);
-          idx = hexBoard.findClosest(idx);             
-          if (idx === -1) continue; // couldn't place
-             
+          // todo: no overlaps to start?
           npc.placeInHex(idx);
 
           objects.push(
@@ -424,7 +439,7 @@ function drawScene()
           mvPushMatrix();
          
           if (obj.translate) mat4.translate(mvMatrix, [obj.translate.x, obj.translate.y, obj.translate.z]);
-          if (obj.rotate) mat4.rotate(mvMatrix, obj.rotate.r * DEG2RAD, [0, 0, 1]);
+          if (obj.rotate) mat4.rotate(mvMatrix, obj.rotate.r, [0, 0, 1]);
           if (obj.scale) mat4.scale(mvMatrix, [obj.scale.s, obj.scale.s, obj.scale.s]);
     
           var g = geometry[obj.geometry];
@@ -472,6 +487,8 @@ function animate()
 
 function updateGame()
 {
+   player.previewDir({x:lastMouseX, y:lastMouseY});
+
    // check for intersections
    for (var i = 0; i < npcs.length; i++)
    {
@@ -512,6 +529,7 @@ function webGLStart()
     gl.enable(gl.DEPTH_TEST);   
 
     document.onkeydown = handleKeyDown;
+    document.onmousemove = handleMouseMove;
 
     tick();
 }

@@ -297,17 +297,12 @@ class HexBoard
       return neighbors;
    }
 
-   findClosest(idx)
-   {
-      return idx; // let items overlap for now:w
-   }
-
    getMoves(idx)
    {
       var moves = [];
       for (var i = 0; i < NEIGHBORS.length; i++)
       {
-         if (this.isValidMove(idx,NEIGHBORS[i]))
+         if (this.isValidMove(idx,NEIGHBORS[i]) !== -1)
          {
             moves.push(NEIGHBORS[i]);
          }

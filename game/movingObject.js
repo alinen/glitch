@@ -9,10 +9,8 @@ class MovingObject
       this.scale = {s:1},
       this.rotate = {r:0},
       this.dir = {x:0, y:0};
-      this.nextDir = {x:0, y:0};
       this.currentHex = -1;
       this.targetHex = -1;
-      this.nextHex = -1;      
    }
 
    placeInHex(hexIdx)
@@ -55,11 +53,9 @@ class MovingObject
          {
             this._reachedTarget(this.targetHex);
    
-            this.dir = this.nextDir;
-            this.nextDir = {x:0,y:0};
+            this.dir = {x:0,y:0};
             this.currentHex = this.targetHex;
-            this.targetHex = this.nextHex;
-            this.nextHex = -1;
+            this.targetHex = -1;
             this.pos = target;
             //console.log("update "+this.currentHex+" "+this.targetHex+" "+this.nextHex);
          }
@@ -85,15 +81,6 @@ class MovingObject
             this.targetHex = nextIdx;
          }
       }
-      else
-      {
-         var nextIdx = hexBoard.isValidMove(this.targetHex, move); 
-         if (nextIdx !== -1)
-         {
-            this.nextDir = move.dir;
-            this.nextHex = nextIdx;
-         }
-      }
    }
    
    isMoving()
@@ -104,8 +91,6 @@ class MovingObject
    clearDir()
    {
       this.dir = {x:0, y:0};
-      this.nextDir = {x:0, y:0};
       this.targetHex = -1;
-      this.nextHex = -1;
    }   
 }
