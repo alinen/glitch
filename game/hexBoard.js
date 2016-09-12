@@ -2,7 +2,12 @@ var CAVE =
 {
    EMPTY: 0,
    BLOOD: 1,
-   BEAST: 2
+   BEAST: 2,
+   STAR: 3,
+   ORB: 4,
+   HEART: 5,
+   SPAWN: 6,
+   PLAYER: 7
 }
 
 class MazeNode
@@ -261,6 +266,24 @@ class HexBoard
       return sides;
    }
 
+   getHexType(idx)
+   {
+      return this.maze[idx].type;
+   }
+   
+   setHexType(idx, type)
+   {
+      this.maze[idx].type = type;
+      if (type === CAVE.BEAST)
+      {
+         var neighborIds = this.getNeighbors(idx);
+         for (var j = 0; j < neighborIds.length; j++)
+         {
+            this.maze[neighborIds[j]].type = CAVE.BLOOD;
+         }
+      }
+   }
+
    getNeighborId(idx, side)
    {
       var cell = this.idToCell(idx);
@@ -315,6 +338,12 @@ class HexBoard
       var offset = idx * 18 * 4;
       for (var i = 0; i < 18; i++)
       {
+         if (this.maze[idx].type === CAVE.BEAST || this.maze[idx].type === CAVE.BLOOD)
+         {
+            this.colors[offset+i*4+0] = 1.0;
+            this.colors[offset+i*4+1] = 0.0;
+            this.colors[offset+i*4+2] = 0.0;
+         }
          this.colors[offset+i*4+3] = alpha;
       } 
 

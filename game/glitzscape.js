@@ -345,9 +345,13 @@ function initBuffers()
     });
 }
 
-function initObjects()
+function initObjects(gameState)
 {
-    gameState = new GameState();
+    //-- place beast
+    var idx = findEmptyHex(); // todo: allow blood and other things in same cell?
+    hexBoard.setHexType(idx, CAVE.BEAST);         
+
+    objects = [];
 
     // -- background objects
     objects.push(
@@ -390,9 +394,9 @@ function initObjects()
        {
           var npc = new NPC(item.respawnTime);
 
-          var idx = Math.floor(Math.random() * hexBoard.numHex);
-          // todo: no overlaps to start?
+          var idx = findEmptyHex();
           npc.placeInHex(idx);
+          hexBoard.setHexType(idx,item.type);
 
           objects.push(
           {
@@ -410,7 +414,7 @@ function initObjects()
     });
 
     //-- player object
-    var idx = Math.floor(Math.random() * hexBoard.numHex);
+    var idx = findEmptyHex();
     player.placeInHex(idx);    
     objects.push(
     {
@@ -422,6 +426,13 @@ function initObjects()
        texture: backgroundTex,
        enabled: true
     });
+}
+
+function findEmptyHex()
+{
+   var idx = Math.floor(Math.random() * hexBoard.numHex);
+   while (hexBoard.getHexType(idx) !== CAVE.EMPTY) (idx = idx + 1) % hexBoard.numHex;
+   return idx;
 }
 
 function drawScene() 
@@ -516,7 +527,9 @@ function webGLStart()
     initShaders();
     initBuffers();
     loadTextures();
-    initObjects();
+
+    gameState = new GameState();
+    initObjects(gameState);
 
     //var p1 = hexCenterById(idx);
     //var idx2 = pointToHexId(p1);
