@@ -2,11 +2,7 @@ var CAVE =
 {
    EMPTY: 0,
    BLOOD: 1,
-   WAMPUS: 2,
-   SPAWN: 3,
-   STAR: 4,
-   ORB: 5,
-   ENERGY: 6
+   BEAST: 2
 }
 
 class MazeNode
@@ -192,6 +188,7 @@ class HexBoard
          this.maze.push(new MazeNode());
          this.maze[i].visited = false;
          this.maze[i].neighbors = [];
+         this.maze[i].type = CAVE.EMPTY;
       }
 
       // select random start node and push to a stack
@@ -300,6 +297,24 @@ class HexBoard
       return neighbors;
    }
 
+   findClosest(idx)
+   {
+      return idx; // let items overlap for now:w
+   }
+
+   getMoves(idx)
+   {
+      var moves = [];
+      for (var i = 0; i < NEIGHBORS.length; i++)
+      {
+         if (this.isValidMove(idx,NEIGHBORS[i]))
+         {
+            moves.push(NEIGHBORS[i]);
+         }
+      }
+      return moves;
+   }
+
    showHexById(idx, alpha)
    {
       var offset = idx * 18 * 4;
@@ -339,7 +354,6 @@ class HexBoard
 
    isValidMove(idx, dir)
    {
-      //console.log("isValidMove "+idx + " "+dir);
       var node = this.maze[idx];
       var neighborIdx = this.getNeighborId(idx, dir);
       for (var i = 0; neighborIdx !== -1 && i < node.neighbors.length; i++)
@@ -383,8 +397,6 @@ class HexBoard
          j = j/2.0;
       }
    
-      console.log("pointToHexId: "+xoffset+" "+yoffset+" "+x+" "+y+" "+row+" "+col+" "+i+" "+j);
-      
       var idx = i * this.numCols + j;
       return idx;
    }

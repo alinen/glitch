@@ -11,14 +11,14 @@ var GEOMETRY =
 
 // webGL state and helpers
 var gl;
-
 var shaderTex;
 var shaderTexInvert;
 var shaderSolid;
 var backgroundTex;
 var orbTex;
 var starTex;
-var cubeTex;
+var heartTex;
+var spawnTex;
 var mvMatrix = mat4.create();
 var mvMatrixStack = [];
 var pMatrix = mat4.create();
@@ -30,6 +30,8 @@ var worldSize = 10.0;
 var lastTime = 0;
 var player = new Player();
 var hexBoard = new HexBoard(1.0, worldSize, 0.1);
+var gameState = null;
+var npcs = [];
 var left = -worldSize;
 var right = worldSize;
 var bottom = -worldSize;
@@ -170,8 +172,9 @@ function loadTextures()
 {
    initTexture();
    orbTex = initTextureFromFile("orb.png");
-   starTex = initTextureFromFile("spawn.png");
-   cubeTex = initTextureFromFile("heart.png");
+   starTex = initTextureFromFile("star.png");
+   heartTex = initTextureFromFile("heart.png");
+   spawnTex = initTextureFromFile("spawn.png");
 } 
 
 function mvPushMatrix() 
@@ -325,8 +328,11 @@ function initBuffers()
     });
 }
 
-function initObjects(gameParams)
+function initObjects()
 {
+    gameState = new GameState();
+
+    // -- background objects
     objects.push(
     {
        geometry: GEOMETRY.QUAD,
@@ -357,46 +363,45 @@ function initObjects(gameParams)
        texture: backgroundTex
     });    
 
-    objects.push(
+    //--- game objects
+    gameState.items.forEach(function(item) 
     {
-       geometry: GEOMETRY.QUAD,
-       translate : {x:1,y:1,z:-5},
-       rotate : null,
-       scale : {s:0.5},
-       shader : shaderTex,
-       texture: orbTex
-    });
-    
-    objects.push(
-    {
-       geometry: GEOMETRY.QUAD,
-       translate : {x:2,y:2,z:-5},
-       rotate : null,
-       scale : {s:0.5},
-       shader : shaderTex,
-       texture: cubeTex
-    });
-    
-    objects.push(
-    {
-       geometry: GEOMETRY.QUAD,
-       translate : {x:3,y:3,z:-5},
-       rotate : null,
-       scale : {s:1.0},
-       shader : shaderTex,
-       texture: starTex
-    });
-    
-    objects.push(
-    {    
-       geometry: GEOMETRY.TRI,
-       translate : player.translate,
-       rotate : player.rot,
-       scale : player.scale,
-       shader : shaderSolid,
-       texture: backgroundTex    
+       for (var j = 0; j < item.num; j++)
+       {
+          var npc = new NPC(item.respawnTime);
+
+          var idx = Math.floor(Math.random() * hexBoard.numHex);
+          idx = hexBoard.findClosest(idx);             
+          if (idx === -1) continue; // couldn't place
+             
+          npc.placeInHex(idx);
+
+          objects.push(
+          {
+             geometry: item.geom,
+             translate : npc.translate,
+             rotate : npc.rotate,
+             scale : npc.scale,
+             shader : shaderTex,
+             texture: item.texture
+          });
+
+          npcs.push(npc); //might not work if npc pointer changes
+       }
     });
 
+    //-- player object
+    var idx = Math.floor(Math.random() * hexBoard.numHex);
+    player.placeInHex(idx);    
+    objects.push(
+    {
+       geometry: GEOMETRY.TRI,
+       translate : player.translate,
+       rotate : player.rotate,
+       scale : player.scale,
+       shader : shaderSolid,
+       texture: backgroundTex
+    });
 }
 
 function drawScene() 
@@ -447,8 +452,12 @@ function animate()
     var timeNow = new Date().getTime();
     if (lastTime != 0) 
     {
-        var elapsed = timeNow - lastTime;
-        player.update(elapsed);
+        var dt = timeNow - lastTime;
+        player.update(dt);
+        for (var i = 0; i < npcs.length; i++)
+        {
+           npcs[i].update(dt);
+        }
     }
     lastTime = timeNow;
 }
@@ -467,10 +476,7 @@ function webGLStart()
     initShaders();
     initBuffers();
     loadTextures();
-    initObjects(null);
-
-    var idx = Math.floor(Math.random() * hexBoard.numHex);
-    player.placeInHex(idx);
+    initObjects();
 
     //var p1 = hexCenterById(idx);
     //var idx2 = pointToHexId(p1);
@@ -478,7 +484,7 @@ function webGLStart()
     //console.log("TEST "+idx+" "+p1+" "+idx2+" "+p2);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE); //gl.ONE_MINUS_SRC_ALPHA); // 
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE); //gl.ONE_MINUS_SRC_ALPHA); 
     gl.enable(gl.BLEND);   
     gl.enable(gl.DEPTH_TEST);   
 
