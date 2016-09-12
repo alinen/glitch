@@ -61,7 +61,6 @@ class Player
             this.pos = target;
             //console.log("update "+this.currentHex+" "+this.targetHex+" "+this.nextHex);
          }
-
       }
    
       if (Math.abs(this.dir.y) > 0.0 || Math.abs(this.dir.x) > 0.0)

@@ -1,13 +1,26 @@
+var CAVE = 
+{
+   EMPTY: 0,
+   BLOOD: 1,
+   WAMPUS: 2,
+   SPAWN: 3,
+   STAR: 4,
+   ORB: 5,
+   ENERGY: 6
+}
+
 class MazeNode
 {
    constructor()
    {
       this.neighbors = [];
       this.visited = false;
+      this.type = CAVE.EMPTY;
    }
 }
 
-var NEIGHBOR = {
+var NEIGHBOR = 
+{
    NE : {value:0, dir:{x: 0.866, y: 0.500}, offset:{i: 1, j: 1} },
    N  : {value:1, dir:{x: 0.000, y: 1.000}, offset:{i: 2, j: 0} },
    NW : {value:2, dir:{x:-0.866, y: 0.500}, offset:{i: 1, j:-1} },
@@ -169,7 +182,6 @@ class HexBoard
          }
       }     
 */
-
    }   
 
    computeMaze()

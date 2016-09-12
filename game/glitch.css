@@ -1,0 +1,20 @@
+.container 
+{
+   position: relative;
+   font-family: "Courier New", Courier, monospace;
+   font-weight: bold;
+   color: #FFFFFF;
+}
+#overlay 
+{
+   position: absolute;
+   left: 0px;
+   top: 0px;
+   padding: 0.25em;
+   display:inline;
+   background-color: rgba(0, 0, 0, 0.5);
+   color: #FFFFFF;
+   width: 500px;
+   vertical-align:middle;	
+}
+

@@ -7,7 +7,7 @@ var fragmentShaderSource_Tex = `
    void main(void) 
    {
       vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-      gl_FragColor = vec4(textureColor.rgb * vColor.rgb, vColor.a);
+      gl_FragColor = vec4(textureColor.rgb * vColor.rgb, textureColor.a * vColor.a);
    }
 `;
 
