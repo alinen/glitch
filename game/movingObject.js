@@ -34,8 +34,8 @@ class MovingObject
 
    passedTarget(targetPos, threshold)
    {
-      var dot = targetPos.x * this.pos.x + targetPos.y * this.pos.y;
-      if (dot < 0) return true; 
+      var dot = (targetPos.x - this.pos.x)* this.dir.x + (targetPos.y - this.pos.y) * this.dir.y;
+      if (dot < -0.001) return true; 
 
       var dSqr = (targetPos.x - this.pos.x)*(targetPos.x - this.pos.x) + 
                  (targetPos.y - this.pos.y)*(targetPos.y - this.pos.y);
@@ -61,7 +61,7 @@ class MovingObject
             this.targetHex = this.nextHex;
             this.nextHex = -1;
             this.pos = target;
-            console.log("update "+this.currentHex+" "+this.targetHex+" "+this.nextHex);
+            //console.log("update "+this.currentHex+" "+this.targetHex+" "+this.nextHex);
          }
       }
    
