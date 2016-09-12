@@ -15,5 +15,10 @@ class Player extends MovingObject
          this.rotate.r = Math.atan2(-this.dir.x, this.dir.y) / DEG2RAD;
       }
    }
+
+   _reachedTarget(idx)
+   {
+      hexBoard.showHexById(idx, 1.0);
+   }
 }
    

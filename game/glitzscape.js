@@ -29,7 +29,7 @@ var objects = [];
 var worldSize = 10.0;
 var lastTime = 0;
 var player = new Player();
-var hexBoard = new HexBoard(1.0, worldSize, 0.1);
+var hexBoard = new HexBoard(1.0, worldSize, 0.0);
 var gameState = null;
 var npcs = [];
 var left = -worldSize;
@@ -147,8 +147,8 @@ function initTexture()
     ctx.fillRect(0,0,canvas.width, canvas.height);
 
     randomStripes(canvas, "colorcube", 16);
-    subVertical(canvas, 128);
-    smoothBox(canvas, 4);   
+    subVertical(canvas, 16);
+    smoothBox(canvas, 2);   
 
     backgroundTex = gl.createTexture();
     backgroundTex.image = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -220,7 +220,7 @@ function handleKeyDown(event)
     {
        move = NEIGHBOR.SE;
     }
-   
+  
     if (move) player.attemptMove(move);
 }
 
@@ -300,10 +300,10 @@ function initBuffers()
     //--
     hexBoard.initBoard();
     hexBoard.computeMaze();
-    left = -worldSize+hexBoard.bRes;
-    right = -worldSize+hexBoard.hexWidth;
-    bottom =  -worldSize + hexBoard.r; 
-    up =  worldSize;
+    //left = -worldSize+hexBoard.bRes;
+    //right = -worldSize+hexBoard.hexWidth;
+    //bottom =  -worldSize + hexBoard.r; 
+    //up =  worldSize;
 
     geometry.push(
     {
@@ -340,7 +340,8 @@ function initObjects()
        rotate : null,
        scale : {s:worldSize},
        shader : shaderTex,
-       texture: backgroundTex
+       texture: backgroundTex,
+       enabled: true
     });
 
     objects.push(
@@ -349,8 +350,9 @@ function initObjects()
        translate : hexBoard.gridPos,
        rotate : null,
        scale : null,
-       shader : shaderSolid,
-       texture: backgroundTex
+       shader : shaderTexInvert,
+       texture: backgroundTex,
+       enabled: true
     });
 
     objects.push(
@@ -360,7 +362,8 @@ function initObjects()
        rotate : null,
        scale : null,
        shader : shaderSolid,
-       texture: backgroundTex
+       texture: backgroundTex,
+       enabled: true
     });    
 
     //--- game objects
@@ -383,7 +386,8 @@ function initObjects()
              rotate : npc.rotate,
              scale : npc.scale,
              shader : shaderTex,
-             texture: item.texture
+             texture: item.texture,
+             enabled: false
           });
 
           npcs.push(npc); //might not work if npc pointer changes
@@ -400,7 +404,8 @@ function initObjects()
        rotate : player.rotate,
        scale : player.scale,
        shader : shaderSolid,
-       texture: backgroundTex
+       texture: backgroundTex,
+       enabled: true
     });
 }
 
@@ -414,36 +419,39 @@ function drawScene()
 
     objects.forEach(function(obj) 
     {
-       mvPushMatrix();
-      
-       if (obj.translate) mat4.translate(mvMatrix, [obj.translate.x, obj.translate.y, obj.translate.z]);
-       if (obj.rotate) mat4.rotate(mvMatrix, obj.rotate.r * DEG2RAD, [0, 0, 1]);
-       if (obj.scale) mat4.scale(mvMatrix, [obj.scale.s, obj.scale.s, obj.scale.s]);
-
-       var g = geometry[obj.geometry];
-
-       gl.useProgram(obj.shader);
-       gl.bindBuffer(gl.ARRAY_BUFFER, g.vertexBuffer);
-       if (g.vertexDynamic) gl.bufferData(gl.ARRAY_BUFFER, g.vertexDynamic, gl.DYNAMIC_DRAW);
-       gl.vertexAttribPointer(obj.shader.vertexPositionAttribute, g.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-       gl.bindBuffer(gl.ARRAY_BUFFER, g.textureBuffer);
-       if (g.textureDynamic) gl.bufferData(gl.ARRAY_BUFFER, g.textureDynamic, gl.DYNAMIC_DRAW);
-       gl.vertexAttribPointer(obj.shader.textureCoordAttribute, g.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-       gl.bindBuffer(gl.ARRAY_BUFFER, g.colorBuffer);
-       if (g.colorDynamic) gl.bufferData(gl.ARRAY_BUFFER, g.colorDynamic, gl.DYNAMIC_DRAW);
-       gl.vertexAttribPointer(obj.shader.colorAttribute, g.colorBuffer.itemSize, gl.FLOAT, false, 0, 0);    
-
-       gl.activeTexture(gl.TEXTURE0);
-       gl.bindTexture(gl.TEXTURE_2D, obj.texture);
-       gl.uniform1i(obj.shader.samplerUniform, 0);
-
-       gl.uniformMatrix4fv(obj.shader.pMatrixUniform, false, pMatrix);
-       gl.uniformMatrix4fv(obj.shader.mvMatrixUniform, false, mvMatrix);
-       
-       gl.drawArrays(g.primitive, 0, g.vertexBuffer.numItems);
-       mvPopMatrix();
+       if (obj.enabled)
+       {
+          mvPushMatrix();
+         
+          if (obj.translate) mat4.translate(mvMatrix, [obj.translate.x, obj.translate.y, obj.translate.z]);
+          if (obj.rotate) mat4.rotate(mvMatrix, obj.rotate.r * DEG2RAD, [0, 0, 1]);
+          if (obj.scale) mat4.scale(mvMatrix, [obj.scale.s, obj.scale.s, obj.scale.s]);
+    
+          var g = geometry[obj.geometry];
+    
+          gl.useProgram(obj.shader);
+          gl.bindBuffer(gl.ARRAY_BUFFER, g.vertexBuffer);
+          if (g.vertexDynamic) gl.bufferData(gl.ARRAY_BUFFER, g.vertexDynamic, gl.DYNAMIC_DRAW);
+          gl.vertexAttribPointer(obj.shader.vertexPositionAttribute, g.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+     
+          gl.bindBuffer(gl.ARRAY_BUFFER, g.textureBuffer);
+          if (g.textureDynamic) gl.bufferData(gl.ARRAY_BUFFER, g.textureDynamic, gl.DYNAMIC_DRAW);
+          gl.vertexAttribPointer(obj.shader.textureCoordAttribute, g.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    
+          gl.bindBuffer(gl.ARRAY_BUFFER, g.colorBuffer);
+          if (g.colorDynamic) gl.bufferData(gl.ARRAY_BUFFER, g.colorDynamic, gl.DYNAMIC_DRAW);
+          gl.vertexAttribPointer(obj.shader.colorAttribute, g.colorBuffer.itemSize, gl.FLOAT, false, 0, 0);    
+    
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindTexture(gl.TEXTURE_2D, obj.texture);
+          gl.uniform1i(obj.shader.samplerUniform, 0);
+    
+          gl.uniformMatrix4fv(obj.shader.pMatrixUniform, false, pMatrix);
+          gl.uniformMatrix4fv(obj.shader.mvMatrixUniform, false, mvMatrix);
+        
+          gl.drawArrays(g.primitive, 0, g.vertexBuffer.numItems);
+          mvPopMatrix();
+       }
     });
 }
 
@@ -462,11 +470,25 @@ function animate()
     lastTime = timeNow;
 }
 
+function updateGame()
+{
+   // check for intersections
+   for (var i = 0; i < npcs.length; i++)
+   {
+      if (npcs[i].curentHex === player.currentHex)
+      {
+         npcs[i].playerEvent(player);
+         objects[i].enabled = true;
+      }
+   }
+}
+
 function tick() 
 {
     requestAnimFrame(tick);
     drawScene();
     animate();
+    updateGame();
 }
 
 function webGLStart() 
@@ -484,7 +506,7 @@ function webGLStart()
     //console.log("TEST "+idx+" "+p1+" "+idx2+" "+p2);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE); //gl.ONE_MINUS_SRC_ALPHA); 
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); 
     gl.enable(gl.BLEND);   
     gl.enable(gl.DEPTH_TEST);   
 

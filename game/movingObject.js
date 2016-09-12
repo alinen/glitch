@@ -18,8 +18,8 @@ class MovingObject
    placeInHex(hexIdx)
    {
       this.pos = hexBoard.getHexCenterById(hexIdx);
-      hexBoard.showHexById(hexIdx, 0.95);
-      console.log("place:  " + this.pos.x + " " + this.pos.y + " id: " + hexIdx);
+      this._reachedTarget(hexIdx);
+      //console.log("place:  " + this.pos.x + " " + this.pos.y + " id: " + hexIdx);
    
       this.dir = {x:0,y:0};
       this.nextDir = {x:0,y:0};
@@ -51,7 +51,7 @@ class MovingObject
          var target = hexBoard.getHexCenterById(this.targetHex);
          if (this.passedTarget(target, 0.01))
          {
-            hexBoard.showHexById(this.targetHex, 1.0);
+            this._reachedTarget(this.targetHex);
    
             this.dir = this.nextDir;
             this.nextDir = {x:0,y:0};
@@ -65,6 +65,10 @@ class MovingObject
    
       this.translate.x = this.pos.x; 
       this.translate.y = this.pos.y; 
+   }
+
+   _reachedTarget(idx)
+   {
    }
 
    attemptMove(move)

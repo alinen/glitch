@@ -99,6 +99,7 @@ function randomStripes(canvas, pallet, stride)
          r = cmap[idx * 3 + 0] * 255;
          g = cmap[idx * 3 + 1] * 255;
          b = cmap[idx * 3 + 2] * 255;
+         b = cmap[idx * 3 + 3] * 255;
       }     
       for (var j = 0; j < canvas.width; j++)
       {

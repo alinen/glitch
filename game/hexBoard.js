@@ -104,10 +104,10 @@ class HexBoard
                textureList.push((this.shape[p] * this.margin+x+this.boardSize)/(2*this.boardSize));
                textureList.push((this.shape[p+1] * this.margin+y+this.boardSize)/(2*this.boardSize));
    
-               colorList.push(0.1);
-               colorList.push(0.1);
-               colorList.push(0.1);
-               colorList.push(0.5);
+               colorList.push(1.0);
+               colorList.push(1.0);
+               colorList.push(1.0);
+               colorList.push(0.0);
             }
 
             for (var p = 0; p < this.shape.length; p+=3)
@@ -123,8 +123,8 @@ class HexBoard
                lColorList.push(1.0);
                lColorList.push(0);
 
-               lTextureList.push(0);
-               lTextureList.push(0); 
+               lTextureList.push((this.shape[p] * 0.95+x+this.boardSize)/(2*this.boardSize));
+               lTextureList.push((this.shape[p+1] * 0.95+y+this.boardSize)/(2*this.boardSize)); 
             }            
             this.numHex++;
             x += 3 * this.b;
@@ -331,7 +331,7 @@ class HexBoard
          //var pathOffset = ((this.numHex + idx) * 6 + s) * 2 * 4;
 //       console.log( NEIGHBORS[s].dir.x+" "+ NEIGHBORS[s].dir.y+" "+neighborIdx+" "+sideOffset+" "+pathOffset+" "+node.neighbors);
 
-         if (neighborIdx === -1 || this.isNeighbor(idx, neighborIdx, node.neighbors))
+         if (neighborIdx !== -1 && this.isNeighbor(idx, neighborIdx, node.neighbors))
          {
             this.lineColors[sideOffset+0+3] = 0;
             this.lineColors[sideOffset+4+3] = 0;
