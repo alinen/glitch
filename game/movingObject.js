@@ -27,7 +27,9 @@ class MovingObject
       this.currentHex = hexIdx;
       this.targetHex = -1;
       this.nextHex = -1;
-      this.scale.s = hexBoard.b * 0.25;
+
+      this.translate.x = this.pos.x; 
+      this.translate.y = this.pos.y; 
    }   
 
    passedTarget(targetPos, threshold)
@@ -59,7 +61,7 @@ class MovingObject
             this.targetHex = this.nextHex;
             this.nextHex = -1;
             this.pos = target;
-            //console.log("update "+this.currentHex+" "+this.targetHex+" "+this.nextHex);
+            console.log("update "+this.currentHex+" "+this.targetHex+" "+this.nextHex);
          }
       }
    

@@ -29,7 +29,7 @@ var objects = [];
 var worldSize = 10.0;
 var lastTime = 0;
 var player = new Player();
-var hexBoard = new HexBoard(1.0, worldSize, 0.0);
+var hexBoard = new HexBoard(2.0, worldSize, 0.0);
 var gameState = null;
 var npcs = [];
 var left = -worldSize;
@@ -367,7 +367,7 @@ function initObjects()
     });    
 
     //--- game objects
-    gameState.items.forEach(function(item) 
+    gameState.items.forEach(function(item)
     {
        for (var j = 0; j < item.num; j++)
        {
@@ -475,10 +475,11 @@ function updateGame()
    // check for intersections
    for (var i = 0; i < npcs.length; i++)
    {
-      if (npcs[i].curentHex === player.currentHex)
+      if (npcs[i].currentHex === player.currentHex)
       {
          npcs[i].playerEvent(player);
-         objects[i].enabled = true;
+         objects[i+3].enabled = true;
+         //console.log("intersection "+npcs[i].currentHex+" "+player.currentHex+" "+npcs[i].translate.x+" "+player.translate.x);
       }
    }
 }

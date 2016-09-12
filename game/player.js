@@ -6,6 +6,13 @@ class Player extends MovingObject
       super();
    }
 
+   placeInHex(hexIdx)
+   {
+      super.placeInHex(hexIdx);
+      this.scale.s = hexBoard.b * 0.25;
+      this.translate.z = -4.0;
+   }
+
    update(dt)
    {
       super.update(dt);
