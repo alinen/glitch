@@ -25,29 +25,25 @@ class GameState
          num: 4,
          respawnTime: 20,
          type: CAVE.SPAWN,
-         geom: GEOMETRY.QUAD,
-         texture: spawnTex            
+         geom: GEOMETRY.SPAWN
       },
       {
          num: 2,
          respawnTime: 10,
          type: CAVE.STAR,
-         geom: GEOMETRY.QUAD,
-         texture: starTex            
+         geom: GEOMETRY.STAR
       },
       {
          num: 1,
          respawnTime: 30,
          type: CAVE.ORB,
-         geom: GEOMETRY.QUAD,
-         texture: orbTex            
+         geom: GEOMETRY.ORB
       },
       {
          num: 1,
          respawnTime: 20,
          type: CAVE.HEART,
-         geom: GEOMETRY.QUAD,
-         texture: heartTex            
+         geom: GEOMETRY.HEART
       }
       ];
    }

@@ -7,6 +7,7 @@ class NPC extends MovingObject
       this.spawnIdx = -1;
       this.respawnTime = respawnTime;
       this.active = false;
+      this.scale.s = 0.4;
    }
 
    placeInHex(idx)
