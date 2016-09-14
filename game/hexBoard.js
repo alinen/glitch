@@ -272,14 +272,6 @@ class HexBoard
    setHexType(idx, type)
    {
       this.maze[idx].type = type;
-      if (type === CAVE.BEAST)
-      {
-         var neighborIds = this.getNeighbors(idx);
-         for (var j = 0; j < neighborIds.length; j++)
-         {
-            this.maze[neighborIds[j]].type = CAVE.BLOOD;
-         }
-      }
    }
 
    getNeighborId(idx, side)

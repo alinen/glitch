@@ -5,7 +5,8 @@ var ITEMS =
    SPAWN: 1,
    STAR: 2,
    ORB: 3,
-   ENERGY: 4
+   ENERGY: 4,
+   BLOOD: 5
 }
 
 class GameState

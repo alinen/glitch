@@ -4,6 +4,14 @@ class Player extends MovingObject
    constructor() 
    {
       super();
+      this.starCount = 0;
+      this.orbCount = 0;
+      this.spawnCount = 0;
+   }
+
+   init()
+   {
+      this.health = gameState.health;
    }
 
    placeInHex(hexIdx)
@@ -60,5 +68,38 @@ class Player extends MovingObject
           this.attemptMove(NEIGHBORS[mini]);
       }
    }
+
+   /*
+   function pickup(type)
+   {
+      if (type === CAVE.STAR)
+      {
+         this.starCount++;
+         this.activateStar();
+      }
+      else if (type === CAVE.ORB)
+      {
+         this.orbCount++;
+      } 
+      else if (type === CAVE.SPAWN)
+      {
+         this.spawnCount++;
+      }
+   }
+
+   function activateOrb()
+   {
+      if (this.orbCount > 0)
+      {
+         this.orbCount--;
+         return true;
+      }
+   }
+
+   function activateStar()
+   {
+      this.starTime = gameState.starDuration;
+   }
+   */
 }
    

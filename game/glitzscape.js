@@ -571,11 +571,7 @@ function initBuffers()
 }
 
 function initObjects(gameState)
-{
-    //-- place beast
-    var idx = findEmptyHex(); // todo: allow blood and other things in same cell?
-    hexBoard.setHexType(idx, CAVE.BEAST);         
-
+{      
     objects = [];
 
     // -- background objects
@@ -614,6 +610,28 @@ function initObjects(gameState)
     });    
 
     //--- game objects
+    var idx = findEmptyHex(); // todo: allow blood and other things in same cell?
+    hexBoard.setHexType(idx, CAVE.BEAST);   
+    var bloodcells = hexBoard.getNeighbors(idx);
+    for (var i = 0; i < bloodcells.length; i++)
+    {
+        hexBoard.setHexType(bloodcells[i], CAVE.BLOOD);
+        var npc = new NPC(-1); // infinite
+        npc.placeInHex(bloodcells[i]);
+        objects.push(
+        {
+           geometry: GEOMETRY.BLOOD,
+           translate : npc.translate,
+           rotate : npc.rotate,
+           scale : npc.scale,
+           shader : shaderTex,
+           texture: backgroundTex,
+           enabled: false
+        });
+
+        npcs.push(npc); 
+    }
+
     gameState.items.forEach(function(item)
     {
        for (var j = 0; j < item.num; j++)
@@ -635,7 +653,7 @@ function initObjects(gameState)
              enabled: false
           });
 
-          npcs.push(npc); //might not work if npc pointer changes
+          npcs.push(npc); 
        }
     });
 
