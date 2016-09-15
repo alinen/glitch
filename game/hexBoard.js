@@ -112,7 +112,7 @@ class HexBoard
                colorList.push(1.0);
                colorList.push(1.0);
                colorList.push(1.0);
-               colorList.push(0.0);
+               colorList.push(0.5);
             }
 
             for (var p = 0; p < this.shape.length; p+=3)
@@ -403,28 +403,77 @@ class HexBoard
    
       return true;
    }
+
+   shearTriangleTest(x, y)
+   {
+      var shearx = (x - 0.577 * y);
+      var sqr = Math.floor(shearx / this.b);
+
+      var n = {x: 0.707, y: 0.707};
+      var a = {x: sqr*this.b, y: this.b};
+      var dot = (x - a.x)*n.x + (y - a.y)*n.y;
+      var tri = sqr * 2;
+      if (dot > 0) tri = tri + 1;
+
+      var hexcol = Math.floor(tri / 3);
+      return hexcol
+   }
    
    pointToId(p)
    {   
-      var xoffset = -sqrSize + this.bRes * 0.5;
-      var yoffset = -sqrSize + this.r * 0.5;
-      var x = p[0] - xoffset;
-      var y = p[1] - yoffset;
-      var row = Math.floor(y / this.hexR);
-      var col = Math.floor(x / (2 * (this.b - 0.5*this.bRes)));
-   
-      var i = row;
-      var j = 0;
-      if (i % 2 == 0)
+      var x = p.x + worldSize;
+      var y = p.y + worldSize;
+
+      var half_row = Math.floor(y/this.r);
+      y = y - half_row*this.r;
+
+      var hexcol = -1;
+      var row = -1;
+      if (half_row % 2 == 0) // what's this doing? see docs
       {
-         j = (j-1)/2.0;
+         hexcol = this.shearTriangleTest(x,y);
+         row = Math.floor(half_row * 0.5);
       }
       else
       {
-         j = j/2.0;
+         var width = this.numCols * this.b * 3 + this.bRes; // cols are reversed here
+         x = width - x;
+         var hexcolrev = this.shearTriangleTest(x,y);
+         hexcol = this.numCols*2 - hexcolrev - 1;
+         row = Math.floor((half_row-1) * 0.5);
       }
-   
-      var idx = i * this.numCols + j;
+
+      var idx = -1;
+      var cell = {};
+      if (hexcol % 2 === 0)
+      {
+         cell.j = Math.floor(hexcol/2.0);
+         if (half_row % 2 ===0)
+         {
+            cell.i =  Math.floor(half_row/2.0);
+         }
+         else
+         {
+            cell.i =  Math.floor((half_row+1)/2.0);
+         }
+      }
+      else
+      {
+         cell.j = Math.floor((hexcol-1)/2.0);
+         if (half_row % 2 ===0)
+         {
+            cell.i =  Math.floor(half_row/2.0);
+         }
+         else
+         {
+            cell.i =  Math.floor((half_row-1)/2.0);
+         }         
+      }
+      if (this.isValidHex(cell))
+      {
+         idx = this.cellToId(cell);
+      } 
+
       return idx;
    }
    
