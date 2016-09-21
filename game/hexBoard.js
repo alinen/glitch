@@ -226,8 +226,11 @@ class HexBoard
       }
    }
 
-   isNeighbor(idx, neighborIdx, neighbors)
+   isNeighbor(idx, neighborIdx)
    {
+      if (idx === -1 || neighborIdx === -1) return false;
+
+      var neighbors = this.maze[idx].neighbors;
       for (var i = 0; i < neighbors.length; i++)
       {
          if (neighbors[i] === neighborIdx) return true;
@@ -335,7 +338,7 @@ class HexBoard
       {
          var neighborIdx = this.getNeighborId(idx,NEIGHBORS[s]);
          var showNeighborBlood = (this.maze[idx].type === CAVE.BEAST || this.maze[idx].type === CAVE.BLOOD);
-         if (neighborIdx !== -1 && this.isNeighbor(idx, neighborIdx, node.neighbors))
+         if (neighborIdx !== -1 && this.isNeighbor(idx, neighborIdx))
          {
             var neighborGeomIdx = this.bridgeGeometry[idx][s] * 4;
             if (neighborGeomIdx === -1) continue
@@ -428,26 +431,26 @@ class HexBoard
       var cell = {};
       if (hexcol % 2 === 0)
       {
-         cell.j = Math.floor(hexcol/2.0);
+         cell.j = Math.floor(hexcol);
          if (half_row % 2 ===0)
          {
-            cell.i =  Math.floor(half_row/2.0);
+            cell.i =  Math.floor(half_row-1);
          }
          else
          {
-            cell.i =  Math.floor((half_row+1)/2.0);
+            cell.i =  Math.floor(half_row);
          }
       }
       else
       {
-         cell.j = Math.floor((hexcol-1)/2.0);
+         cell.j = Math.floor(hexcol);
          if (half_row % 2 ===0)
          {
-            cell.i =  Math.floor(half_row/2.0);
+            cell.i =  Math.floor(half_row);
          }
          else
          {
-            cell.i =  Math.floor((half_row-1)/2.0);
+            cell.i =  Math.floor(half_row-1);
          }         
       }
       var idx = -1;      
