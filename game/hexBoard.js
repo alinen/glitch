@@ -50,6 +50,7 @@ class HexBoard
       this.lines = []; // mostly static, changes when maze changes
       this.lineColors = []; // mostly static, changes when maze changes
       this.boardSize = boardSize;
+      this.bridgeGeometry = [];
 
       this.gridPos = {x:0,y:0,z:-8};
       this.linePos = {x:0,y:0,z:-7};
@@ -78,15 +79,26 @@ class HexBoard
       this.numHexPts = this.shape.length;          
    }
 
+   addVertex(px, py, pz, vertexList, textureList, colorList)
+   {
+      vertexList.push(px);
+      vertexList.push(py);
+      vertexList.push(pz);
+   
+      textureList.push((px+this.boardSize)/(2*this.boardSize));
+      textureList.push((py+this.boardSize)/(2*this.boardSize));
+   
+      colorList.push(1.0);
+      colorList.push(1.0);
+      colorList.push(1.0);
+      colorList.push(0.0);      
+   }
+
    initBoard()
    {
       var vertexList = [];
       var textureList = [];
       var colorList = [];
-
-      var lVertexList = [];
-      var lTextureList = [];
-      var lColorList = [];      
 
       var startx = -this.boardSize;
       var y = -this.boardSize + this.r;
@@ -102,85 +114,65 @@ class HexBoard
          {         
             for (var p = 0; p < this.shape.length; p+=3)
             {
-               vertexList.push(this.shape[p] * this.margin+x);
-               vertexList.push(this.shape[p+1] * this.margin+y);
-               vertexList.push(this.shape[p+2]);
-   
-               textureList.push((this.shape[p] * this.margin+x+this.boardSize)/(2*this.boardSize));
-               textureList.push((this.shape[p+1] * this.margin+y+this.boardSize)/(2*this.boardSize));
-   
-               colorList.push(1.0);
-               colorList.push(1.0);
-               colorList.push(1.0);
-               colorList.push(0.5);
+               this.addVertex(this.shape[p] * this.margin + x, this.shape[p+1] * this.margin + y, 0, 
+                     vertexList, textureList, colorList);
             }
 
-            for (var p = 0; p < this.shape.length; p+=3)
-            {
-               if (p % 9 == 0) continue; // skip middle point
-
-               lVertexList.push(this.shape[p] * 0.95 + x);
-               lVertexList.push(this.shape[p+1] * 0.95 + y);
-               lVertexList.push(this.shape[p+2]);
-  
-               lColorList.push(1.0);
-               lColorList.push(1.0);
-               lColorList.push(1.0);
-               lColorList.push(0);
-
-               lTextureList.push((this.shape[p] * 0.95+x+this.boardSize)/(2*this.boardSize));
-               lTextureList.push((this.shape[p+1] * 0.95+y+this.boardSize)/(2*this.boardSize)); 
-            }            
             this.numHex++;
             x += 3 * this.b;
          }
          y += this.r;
       }
-
       this.vertices = new Float32Array(vertexList);
-      this.colors = new Float32Array(colorList);
-      this.uvs = new Float32Array(textureList);
 
-      console.log("Init board: " + this.numRows + " " + this.numCols + " " + this.numHex);
-
+      this.bridgeGeometry = []; // map between idx and starting geometry ID of bridges in each direction
       for (var idx = 0; idx < this.numHex; idx++)
       {
          // draw lines between each node and it's neighbors
-         var p = this.getHexCenterById(idx);         
+         this.bridgeGeometry[idx] = [-1,-1,-1,-1,-1,-1];
+         var sides = this.getHexSidesById(idx)
          for (var n = 0; n < NEIGHBORS.length; n++)
          {
-            x = p.x + NEIGHBORS[n].dir.x * this.r * 2;
-            y = p.y + NEIGHBORS[n].dir.y * this.r * 2;
+            var neighborIdx = this.getNeighborId(idx, NEIGHBORS[n]);
+            if (neighborIdx < idx) // we already created the geometry for it, or -1
+            {
+               if (neighborIdx !== -1)
+               {
+                  var neighborSideId = (n+3) % 6; // get corresponding side from neighbor
+                  var bridgeId = this.bridgeGeometry[neighborIdx][neighborSideId];
+                  this.bridgeGeometry[idx][n] = bridgeId;
+               }
+               continue;
+            }
 
-            lVertexList.push(p.x);
-            lVertexList.push(p.y);
-            lVertexList.push(0.0);
-  
-            lVertexList.push(x);
-            lVertexList.push(y);
-            lVertexList.push(0.0);
+            // create bridge
+            this.bridgeGeometry[idx][n] = vertexList.length / 3;  // store triangle index so we can show it later
 
-            lColorList.push(1);
-            lColorList.push(1);
-            lColorList.push(1);
-            lColorList.push(0);
+            var neighborSides = this.getHexSidesById(neighborIdx);
+            var neighborSideId = (n+3) % 6; // get corresponding side from neighbor
+            var neighborSideP1 = neighborSides[neighborSideId*2+0];
+            var neighborSideP2 = neighborSides[neighborSideId*2+1];
 
-            lColorList.push(1);
-            lColorList.push(1); 
-            lColorList.push(1); 
-            lColorList.push(0);
+            var p1 = sides[n*2+0];
+            var p2 = sides[n*2+1];
+            //console.log(neighborIdx, neighborSides[0], neighborSideP1.x, neighborSideP2.x, p1.x, p2.x);
 
-            lTextureList.push((p.x+this.boardSize)/(2*this.boardSize));
-            lTextureList.push((p.y+this.boardSize)/(2*this.boardSize)); 
+            this.addVertex(p2.x, p2.y, 0, vertexList, textureList, colorList);            
+            this.addVertex(p1.x, p1.y, 0, vertexList, textureList, colorList);
+            this.addVertex(neighborSideP2.x, neighborSideP2.y, 0, vertexList, textureList, colorList);
 
-            lTextureList.push((x+this.boardSize)/(2*this.boardSize));
-            lTextureList.push((y+this.boardSize)/(2*this.boardSize)); 
+            this.addVertex(neighborSideP2.x, neighborSideP2.y, 0, vertexList, textureList, colorList);
+            this.addVertex(neighborSideP1.x, neighborSideP1.y, 0, vertexList, textureList, colorList);
+            this.addVertex(p2.x, p2.y, 0, vertexList, textureList, colorList);                        
          }
-      }    
+         //console.log(this.bridgeGeometry[0]);
+      }          
 
-      this.lines = new Float32Array(lVertexList);
-      this.lineColors = new Float32Array(lColorList);
-      this.lineTexs = new Float32Array(lTextureList);                  
+      this.vertices = new Float32Array(vertexList); // reset with new vertices
+      this.colors = new Float32Array(colorList);
+      this.uvs = new Float32Array(textureList);
+
+      console.log("Init board: " + this.numRows + " " + this.numCols + " " + this.numHex + " "+ this.vertices.length/3);
    }   
 
    computeMaze()
@@ -325,50 +317,40 @@ class HexBoard
 
    showHexById(idx, alpha)
    {
-      var offset = idx * 18 * 4;
+      var showBlood = (this.maze[idx].type === CAVE.BEAST || this.maze[idx].type === CAVE.BLOOD);
+      var offset = idx * 18 * 4; // idx * #hexvertices * numcolorchannels
       for (var i = 0; i < 18; i++)
       {
-         if (this.maze[idx].type === CAVE.BEAST || this.maze[idx].type === CAVE.BLOOD)
+         if (showBlood)
          {
             this.colors[offset+i*4+0] = 1.0;
-            this.colors[offset+i*4+1] = 0.0;
-            this.colors[offset+i*4+2] = 0.0;
+            this.colors[offset+i*4+1] = 0.2;
+            this.colors[offset+i*4+2] = 0.2;
          }
          this.colors[offset+i*4+3] = alpha;
       } 
 
       var node = this.maze[idx];
-      for (var s = 0; s < NEIGHBORS.length; s++)        
+      for (var s = 0; s < NEIGHBORS.length; s++) 
       {
-         var neighborIdx = this.getNeighborId(idx, NEIGHBORS[s]);
-         var sideOffset = (idx * 6 + s) * 2 * 4;
-         var pathOffset = ((this.numHex + idx) * 6 + s) * 2 * 4;
-
-         var s2 = (s+3) % 6; // ugly: get reverse neighbor, todo: represent paths only once
-         var pathOffset1 = ((this.numHex + neighborIdx) * 6 + s2) * 2 * 4;
-
-//       console.log( NEIGHBORS[s].dir.x+" "+ NEIGHBORS[s].dir.y+" "+neighborIdx+" "+sideOffset+" "+pathOffset+" "+node.neighbors);
-
+         var neighborIdx = this.getNeighborId(idx,NEIGHBORS[s]);
+         var showNeighborBlood = (this.maze[idx].type === CAVE.BEAST || this.maze[idx].type === CAVE.BLOOD);
          if (neighborIdx !== -1 && this.isNeighbor(idx, neighborIdx, node.neighbors))
          {
-            //this.lineColors[sideOffset+0+3] = 0;
-            //this.lineColors[sideOffset+4+3] = 0;
-            this.lineColors[pathOffset+0+3] = 1;
-            this.lineColors[pathOffset+4+3] = 1;            
-
-            this.lineColors[pathOffset1+0+3] = 1;
-            this.lineColors[pathOffset1+4+3] = 1;            
-            
+            var neighborGeomIdx = this.bridgeGeometry[idx][s] * 4;
+            if (neighborGeomIdx === -1) continue
+            for (var i = 0; i < 6; i++)
+            {
+               if (showBlood && showNeighborBlood)
+               {
+                  this.colors[neighborGeomIdx+i*4+0] = 1.0;
+                  this.colors[neighborGeomIdx+i*4+1] = 0.2;
+                  this.colors[neighborGeomIdx+i*4+2] = 0.2;                  
+               }
+               this.colors[neighborGeomIdx+i*4+3] = alpha;
+            }
          }
-         else
-         {
-            this.lineColors[sideOffset+0+3] = 0;
-            this.lineColors[sideOffset+4+3] = 0;
-
-            //this.lineColors[pathOffset+0+3] = 0;
-            //this.lineColors[pathOffset+4+3] = 0;                 
-         }
-      }      
+      } 
    }
 
    getHexCenterById(idx)
@@ -404,7 +386,7 @@ class HexBoard
       return true;
    }
 
-   shearTriangleTest(x, y)
+   pointInRhombus(x, y)
    {
       var shearx = (x - 0.577 * y);
       var sqr = Math.floor(shearx / this.b);
@@ -431,19 +413,18 @@ class HexBoard
       var row = -1;
       if (half_row % 2 == 0) // what's this doing? see docs
       {
-         hexcol = this.shearTriangleTest(x,y);
+         hexcol = this.pointInRhombus(x,y);
          row = Math.floor(half_row * 0.5);
       }
       else
       {
          var width = this.numCols * this.b * 3 + this.bRes; // cols are reversed here
          x = width - x;
-         var hexcolrev = this.shearTriangleTest(x,y);
+         var hexcolrev = this.pointInRhombus(x,y);
          hexcol = this.numCols*2 - hexcolrev - 1;
          row = Math.floor((half_row-1) * 0.5);
       }
 
-      var idx = -1;
       var cell = {};
       if (hexcol % 2 === 0)
       {
@@ -469,6 +450,7 @@ class HexBoard
             cell.i =  Math.floor((half_row-1)/2.0);
          }         
       }
+      var idx = -1;      
       if (this.isValidHex(cell))
       {
          idx = this.cellToId(cell);

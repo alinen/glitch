@@ -6,12 +6,11 @@ var GEOMETRY =
    QUAD: 0,
    TRI: 1,
    HEX: 2,
-   HEX_LINE: 3,
-   BLOOD: 4,
-   SPAWN: 5,
-   HEART: 6,
-   ORB: 7,
-   STAR: 8
+   BLOOD: 3,
+   SPAWN: 4,
+   HEART: 5,
+   ORB: 6,
+   STAR: 7
 };
 
 // webGL state and helpers
@@ -33,7 +32,7 @@ var lastMouseY = null;
 var worldSize = 10.0;
 var lastTime = 0;
 var player = new Player();
-var hexBoard = new HexBoard(2.0, worldSize, 0.1);
+var hexBoard = new HexBoard(2.0, worldSize, 0.2);
 var gameState = null;
 var npcs = [];
 var left = -worldSize;
@@ -156,7 +155,8 @@ function initTexture()
     ctx.createImageData(canvas.width, canvas.height);
     ctx.fillRect(0,0,canvas.width, canvas.height);
 
-    randomStripes(canvas, "colorcube", 32);
+    var cmIdx = Math.floor(Math.random() * colormapList.length);
+    randomStripes(canvas, colormapList[cmIdx], 32);
     subVertical(canvas, 16);
     smoothBox(canvas, 2);   
 
@@ -204,7 +204,6 @@ function pauseGame()
    pause = true;
 }
 
-
 function handleMouseMove(event)
 {
     var canvas = document.getElementById("game-canvas");
@@ -223,33 +222,14 @@ function handleMouseMove(event)
 function handleKeyDown(event) 
 {
     var move = null;
-    if (event.keyCode === 81) //q
+    if (event.keyCode === 80) //p
     {
-       //move = NEIGHBOR.NW;
-       paused = true;
+       paused = !paused;
     }
-    if (event.keyCode === 87) //w
+    if (event.keyCode === 32) //spacebar
     {
-       //move = NEIGHBOR.N;
-       paused = false;
+
     }
-    if (event.keyCode === 69) //e
-    {
-       move = NEIGHBOR.NE;
-    }
-    if (event.keyCode === 65) //a
-    {
-       move = NEIGHBOR.SW;
-    }
-    if (event.keyCode === 83) //s
-    {
-       move = NEIGHBOR.S;
-    }
-    if (event.keyCode === 68) //d
-    {
-       move = NEIGHBOR.SE;
-    }
-    
   
     if (move) player.attemptMove(move);
 }
@@ -306,9 +286,9 @@ function initBuffers()
          1, -1,  0.0
     ];
     var tColors = [
-         0.0, 0.0, 1.0, 1.0,
-         0.0, 0.0, 1.0, 1.0,
-         0.0, 0.0, 1.0, 1.0
+         1.0, 1.0, 1.0, 1.0,
+         1.0, 1.0, 1.0, 1.0,
+         1.0, 1.0, 1.0, 1.0
     ];
     var tTexs = [      
         0.5, 1,
@@ -345,17 +325,6 @@ function initBuffers()
        textureDynamic : null,
        primitive : gl.TRIANGLES
     });    
-
-    geometry.push(
-    {
-       vertexBuffer :  createGlBuffer(hexBoard.lines, 3, hexBoard.lines.length/3, gl.STATIC_DRAW),
-       colorBuffer :   createGlBuffer(hexBoard.lineColors, 4, hexBoard.lineColors.length/4, gl.DYNAMIC_DRAW),
-       textureBuffer : createGlBuffer(hexBoard.lineTexs, 2, hexBoard.lineTexs.length/2, gl.STATIC_DRAW),
-       vertexDynamic : null,
-       colorDynamic : hexBoard.lineColors,
-       textureDynamic : null,
-       primitive : gl.LINES
-    });
 
     //-- Blood/Danger
     var vertices = [
@@ -575,18 +544,6 @@ function initObjects(gameState)
     objects = [];
 
     // -- background objects
-    /*
-    objects.push(
-    {
-       geometry: GEOMETRY.QUAD,
-       translate : {x:0,y:0,z:-10},
-       rotate : null,
-       scale : {s:worldSize},
-       shader : shaderTex,
-       texture: backgroundTex,
-       enabled: true
-    });*/
-
     objects.push(
     {    
        geometry: GEOMETRY.HEX,
@@ -597,17 +554,6 @@ function initObjects(gameState)
        texture: backgroundTex,
        enabled: true
     });
-
-    objects.push(
-    {    
-       geometry: GEOMETRY.HEX_LINE,
-       translate : hexBoard.linePos,
-       rotate : null,
-       scale : null,
-       shader : shaderSolid,
-       texture: backgroundTex,
-       enabled: true
-    });    
 
     //--- game objects
     var idx = findEmptyHex(); // todo: allow blood and other things in same cell?
@@ -753,7 +699,7 @@ function updateGame()
       if (npcs[i].currentHex === player.currentHex)
       {
          npcs[i].playerEvent(player);
-         objects[i+2].enabled = true;
+         objects[i+1].enabled = true;
         // console.log("intersection "+npcs[i].currentHex+" "+player.currentHex+" "+objects[i+2].geometry);
       }
    }
