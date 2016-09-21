@@ -1,13 +1,15 @@
 class NPC extends MovingObject
 {
-   constructor(respawnTime)
+   constructor(type, respawnTime)
    {
       super();
 
+      this.type = type;
       this.spawnIdx = -1;
       this.respawnTime = respawnTime;
       this.active = false;
       this.scale.s = 0.4;
+      this.timer = -1;
    }
 
    placeInHex(idx)
@@ -29,8 +31,44 @@ class NPC extends MovingObject
       super.update(dt);
    }
 
-   playerEvent(player)
+   reactTo(player)
    {
       this.active = true;
    }
 }
+
+class Heart extends NPC
+{
+   constructor(type, respawnTime)
+   {
+      super(type, respawnTime);
+   }
+   
+   reactTo(player)
+   {
+      if (this.active)
+      {
+         this.active = false;
+         this.timer = this.respawnTime;
+      }
+      else if (this.timer < 0)
+      {
+         super.reactTo(player);
+      }
+   }
+
+   update(dt)
+   {
+      super.update(dt);
+      if (this.timer > 0)
+      {
+         this.timer -= dt * 0.001;
+         if (this.timer < 0)
+         {
+            this.active = true;
+         }
+      }
+
+   }
+}
+

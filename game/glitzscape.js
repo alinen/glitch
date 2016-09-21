@@ -582,7 +582,15 @@ function initObjects(gameState)
     {
        for (var j = 0; j < item.num; j++)
        {
-          var npc = new NPC(item.respawnTime);
+          var npc = null;
+          if (item.type == CAVE.HEART)
+          {
+              npc = new Heart(item.type, item.respawnTime);
+          }
+          else
+          {
+              npc = new NPC(item.type, item.respawnTime);
+          }
 
           var idx = findEmptyHex();
           npc.placeInHex(idx);
@@ -692,17 +700,19 @@ function animate()
 function updateGame()
 {
    player.previewDir({x:lastMouseX, y:lastMouseY});
-
-   // check for intersections
    for (var i = 0; i < npcs.length; i++)
    {
-      if (npcs[i].currentHex === player.currentHex)
-      {
-         npcs[i].playerEvent(player);
-         objects[i+1].enabled = true;
-        // console.log("intersection "+npcs[i].currentHex+" "+player.currentHex+" "+objects[i+2].geometry);
-      }
+      objects[i+1].enabled = npcs[i].active;
    }
+}
+
+function lookupNPC(idx)
+{
+   for (var i = 0; i < npcs.length; i++)
+   {
+      if (npcs[i].currentHex === idx) return npcs[i];
+   }
+   return null;
 }
 
 function updateHUD()

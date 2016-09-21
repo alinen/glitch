@@ -24,7 +24,7 @@ class GameState
       this.items = [
       {
          num: 4,
-         respawnTime: 20,
+         respawnTime: 5,
          type: CAVE.SPAWN,
          geom: GEOMETRY.SPAWN
       },
@@ -36,7 +36,7 @@ class GameState
       },
       {
          num: 1,
-         respawnTime: 20,
+         respawnTime: 10,
          type: CAVE.HEART,
          geom: GEOMETRY.HEART
       }

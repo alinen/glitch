@@ -33,13 +33,22 @@ class Player extends MovingObject
    _reachedTarget(idx)
    {
       hexBoard.showHexById(idx, 1.0);
-      var type = hexBoard.getHexType(idx);
-      if (type == CAVE.SPAWN)
+      var npc = lookupNPC(idx);
+      if (npc && npc.active)
       {
-         // todo: star power active
-         this.health -= gameState.spawnDamage;
-
+         if (npc.type == CAVE.SPAWN)
+         {
+            this.health -= gameState.spawnDamage;
+         }
+         else if (npc.type == CAVE.HEART)
+         {
+            this.health = gameState.health; // reset health
+         }
       }
+      
+      if (npc) npc.reactTo(this);         
+
+ 
    }
 
    previewDir(worldPoint)
@@ -74,38 +83,5 @@ class Player extends MovingObject
           this.attemptMove(NEIGHBORS[mini]);
       }
    }
-
-   /*
-   function pickup(type)
-   {
-      if (type === CAVE.STAR)
-      {
-         this.starCount++;
-         this.activateStar();
-      }
-      else if (type === CAVE.ORB)
-      {
-         this.orbCount++;
-      } 
-      else if (type === CAVE.SPAWN)
-      {
-         this.spawnCount++;
-      }
-   }
-
-   function activateOrb()
-   {
-      if (this.orbCount > 0)
-      {
-         this.orbCount--;
-         return true;
-      }
-   }
-
-   function activateStar()
-   {
-      this.starTime = gameState.starDuration;
-   }
-   */
 }
    
