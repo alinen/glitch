@@ -17,15 +17,18 @@
 <script type="text/javascript" src="jquery.min.js"></script>
 <script id="shader-fs" type="text/javascript" src="glitzscape-fs.js"></script>
 <script id="shader-vs" type="text/javascript" src="glitzscape-vs.js"></script>
-
 </head>
 
 <body onload="webGLStart();">
     <div class="container" align="center">
-         <table id="healthbar" class="healthbar" style="border: 10px solid black;">
-         <tr>
-         </tr>
-         </table>
+         <div class="health">
+            <div class="healthbar" id="HB0" style="left: 5px;"></div>
+            <div class="healthbar" id="HB1" style="left: 30px;"></div>
+            <div class="healthbar" id="HB2" style="left: 55px;"></div>
+            <div class="healthbar" id="HB3" style="left: 80px;"></div>
+            <div class="healthbar" id="HB4" style="left: 105px;"></div>
+            <div class="healthbar" id="HB5" style="left: 130px;"></div>
+         </div>
       <canvas id="game-canvas" width="500" height="500"></canvas>
     </div>
 </body>

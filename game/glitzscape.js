@@ -606,7 +606,7 @@ function initObjects(gameState)
     //-- player object
     var idx = findEmptyHex();
     player.placeInHex(idx);    
-    player.init(gameState);
+    player.init();
     objects.push(
     {
        geometry: GEOMETRY.TRI,
@@ -617,13 +617,6 @@ function initObjects(gameState)
        texture: backgroundTex,
        enabled: true
     });
-
-   var healthbars = ""; 
-   for (var i = 0; i < player.health; i++)
-   {
-      healthbars += "<td bgcolor=\"#FF0000\" height=\"25px\" width=\"25px\"></td>";
-   }
-   $(".healthbar").append(healthbars);
 }
 
 function findEmptyHex()
@@ -712,12 +705,22 @@ function updateGame()
    }
 }
 
+function updateHUD()
+{
+   for (var i = 0; i < 6; i++)
+   {
+      if (i < player.health) $("#HB"+i).css('background','red');
+      else $("#HB"+i).css('background','black');
+   }
+}
+
 function tick() 
 {
     requestAnimFrame(tick);
     drawScene();
     animate();
     updateGame();
+    updateHUD();
 }
 
 function webGLStart() 

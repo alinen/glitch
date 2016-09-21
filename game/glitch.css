@@ -18,15 +18,11 @@
    width: 500px;
    vertical-align:middle;	
 }
-#healthbar
+.healthbar
 {
-   position: absolute;
-   left: 0px;
-   top: 0px;
-   padding: 0.25em;
-   display:inline;
-   background-color: rgba(0, 0, 0, 0.5);
-   color: #FFFFFF;
-   width: 100px;
-   vertical-align:middle;	
+   width: 20px;
+   height: 20px;
+   margin: 2px;
+   float: left;
+   background: red;
 }

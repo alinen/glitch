@@ -7,7 +7,7 @@ class Player extends MovingObject
       this.arrowCount = 1;
    }
 
-   init(gameState)
+   init()
    {
       this.health = gameState.health;
    }
@@ -33,6 +33,13 @@ class Player extends MovingObject
    _reachedTarget(idx)
    {
       hexBoard.showHexById(idx, 1.0);
+      var type = hexBoard.getHexType(idx);
+      if (type == CAVE.SPAWN)
+      {
+         // todo: star power active
+         this.health -= gameState.spawnDamage;
+
+      }
    }
 
    previewDir(worldPoint)
