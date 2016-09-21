@@ -18,7 +18,7 @@ class GameState
 
    reset()
    {   
-      this.health = 3;
+      this.health = 6;
       this.starDuration = 10;
       this.spawnDamage = 1;
       this.items = [
@@ -33,12 +33,6 @@ class GameState
          respawnTime: 10,
          type: CAVE.STAR,
          geom: GEOMETRY.STAR
-      },
-      {
-         num: 1,
-         respawnTime: 30,
-         type: CAVE.ORB,
-         geom: GEOMETRY.ORB
       },
       {
          num: 1,

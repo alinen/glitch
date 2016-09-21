@@ -4,12 +4,10 @@ class Player extends MovingObject
    constructor() 
    {
       super();
-      this.starCount = 0;
-      this.orbCount = 0;
-      this.spawnCount = 0;
+      this.arrowCount = 1;
    }
 
-   init()
+   init(gameState)
    {
       this.health = gameState.health;
    }
@@ -41,12 +39,13 @@ class Player extends MovingObject
    {
       if (this.targetHex !== -1) return; // already going somewhere
 
+      var hexIdx = hexBoard.pointToId(worldPoint);
+      if (!hexBoard.isNeighbor(this.currentHex, hexIdx)) return; // no work to do
+
       var hexCenter = hexBoard.getHexCenterById(this.currentHex);
       var dirx = worldPoint.x - hexCenter.x;
       var diry = worldPoint.y - hexCenter.y;
       var len = Math.sqrt(dirx*dirx + diry*diry);
-      if (len < hexBoard.r) return; // inside our cell
-
       var ndirx = dirx/len;
       var ndiry = diry/len;
 

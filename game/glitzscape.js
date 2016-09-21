@@ -606,7 +606,7 @@ function initObjects(gameState)
     //-- player object
     var idx = findEmptyHex();
     player.placeInHex(idx);    
-    player.init();
+    player.init(gameState);
     objects.push(
     {
        geometry: GEOMETRY.TRI,
@@ -617,6 +617,13 @@ function initObjects(gameState)
        texture: backgroundTex,
        enabled: true
     });
+
+   var healthbars = ""; 
+   for (var i = 0; i < player.health; i++)
+   {
+      healthbars += "<td bgcolor=\"#FF0000\" height=\"25px\" width=\"25px\"></td>";
+   }
+   $(".healthbar").append(healthbars);
 }
 
 function findEmptyHex()

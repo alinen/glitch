@@ -14,6 +14,7 @@
 <script type="text/javascript" src="player.js" ></script>
 <script type="text/javascript" src="npcs.js" ></script>
 <script type="text/javascript" src="glitzscape.js"></script>
+<script type="text/javascript" src="jquery.min.js"></script>
 <script id="shader-fs" type="text/javascript" src="glitzscape-fs.js"></script>
 <script id="shader-vs" type="text/javascript" src="glitzscape-vs.js"></script>
 
@@ -21,15 +22,11 @@
 
 <body onload="webGLStart();">
     <div class="container" align="center">
+         <table id="healthbar" class="healthbar" style="border: 10px solid black;">
+         <tr>
+         </tr>
+         </table>
       <canvas id="game-canvas" width="500" height="500"></canvas>
-         <!--<table id="overlay" class="hud"><tr>
-               <td >
-                          <img id="h1" src="heart.png" height="25"/>
-                          <img id="h2" src="heart.png" height="25"/>
-                          <img id="h3" src="heart.png" height="25"/>
-                          <img id="h4" src="heart.png" height="25"/></td>
-               <td><img src="orb.png" height="25"/>1</td>
-         </tr></table>-->
     </div>
 </body>
 
