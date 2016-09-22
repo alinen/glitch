@@ -1,3 +1,7 @@
+body 
+{
+	background-color: black;
+}
 .container 
 {
    background-color: rgba(0,0,0,1);
@@ -17,6 +21,15 @@
    color: #FFFFFF;
    width: 500px;
    vertical-align:middle;	
+}
+#title
+{
+   position: absolute;
+   left: 0px;
+   top: 0px;
+   float: left;
+   display:inline;
+   background-color: rgba(0, 0, 0, 1.0);
 }
 .healthbar
 {

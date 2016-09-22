@@ -39,8 +39,11 @@ var left = -worldSize;
 var right = worldSize;
 var bottom = -worldSize;
 var up = worldSize;
-var paused = false;
 var time = 0;
+var paused = true;
+var gameOver = false;
+var titleScreen = null;
+var gameOverScreen = null;
 
 function initGL(canvas) 
 {
@@ -217,6 +220,15 @@ function handleMouseMove(event)
 
     lastMouseX = sceneX;
     lastMouseY = sceneY;
+}
+
+function handleMouseDown(event)
+{
+   if (paused)
+   {
+      $("#title").fadeOut();
+      paused = false;
+   }
 }
 
 function handleKeyDown(event) 
@@ -625,6 +637,19 @@ function initObjects(gameState)
        texture: backgroundTex,
        enabled: true
     });
+
+
+    // monster teeth
+    objects.push(
+    {    
+       geometry: GEOMETRY.QUAD,
+       translate : hexBoard.gridPos,
+       rotate : null,
+       scale : null,
+       shader : shaderTex,
+       texture: teethTex,
+       enabled: true
+    });    
 }
 
 function findEmptyHex()
@@ -681,25 +706,44 @@ function drawScene()
     });
 }
 
+function endGame()
+{
+   gameOver = true;
+   var upperTeeth = document.getElementById("upperTeeth");
+   var lowerTeeth = document.getElementById("lowerTeeth");
+   upperTeeth.show();
+   lowerTeeth.show();
+}
+
 function animate() 
 {
-    var timeNow = new Date().getTime();
-    if (lastTime != 0 && !paused) 
-    {
-        var dt = timeNow - lastTime;
-        time += dt * 0.00005;
-        player.update(dt);
-        for (var i = 0; i < npcs.length; i++)
-        {
-           npcs[i].update(dt);
-        }
-    }
-    lastTime = timeNow;
+   var timeNow = new Date().getTime();
+   if (!gameOver)
+   {
+      if (lastTime != 0 && !paused) 
+      {
+         var dt = timeNow - lastTime;
+         time += dt * 0.00005;
+         player.update(dt);
+         for (var i = 0; i < npcs.length; i++)
+         {
+            npcs[i].update(dt);
+         }
+      }
+      lastTime = timeNow;
+   }
+   else
+   {
+      var upperTeeth = document.getElementById("upperTeeth");
+      var lowerTeeth = document.getElementById("lowerTeeth");
+   }
 }
 
 function updateGame()
 {
    player.previewDir({x:lastMouseX, y:lastMouseY});
+   if (player.isDead && !gameOver) endGame();
+   
    for (var i = 0; i < npcs.length; i++)
    {
       objects[i+1].enabled = npcs[i].active;
@@ -756,6 +800,12 @@ function webGLStart()
 
     document.onkeydown = handleKeyDown;
     document.onmousemove = handleMouseMove;
+    document.onmousedown = handleMouseDown;
+
+    var canvasRect = canvas.getBoundingClientRect();
+    titleScreen = document.getElementById("title");
+    titleScreen.style.left = (canvasRect.left+canvas.width*0.5-407*0.5)+'px';
+    titleScreen.style.top = '100px';
 
     tick();
 }

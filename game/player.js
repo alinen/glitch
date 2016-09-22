@@ -5,11 +5,14 @@ class Player extends MovingObject
    {
       super();
       this.arrowCount = 1;
+      this.isDead = false;
+      this.health = 0;
    }
 
    init()
    {
       this.health = gameState.health;
+      this.isDead = false;
    }
 
    placeInHex(hexIdx)
@@ -43,6 +46,11 @@ class Player extends MovingObject
          else if (npc.type == CAVE.HEART)
          {
             this.health = gameState.health; // reset health
+         }
+         else if (npc.type === CAVE.BEAST)
+         {
+            this.health = 0;
+            this.isDead = true;
          }
       }
       
