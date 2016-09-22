@@ -43,7 +43,6 @@ class Player extends MovingObject
       {
          this.health = 0;
          this.isDead = true;
-         console.log("DIE");
       }      
       else
       {

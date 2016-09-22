@@ -213,7 +213,10 @@ class HexBoard
             }
          }
       }
+   }
 
+   getPath(startIdx, targetIdx)
+   {
    }
 
    shuffle(array) // Fisher–Yates_shuffle
@@ -390,6 +393,13 @@ class HexBoard
       return true;
    }
 
+   findEmpty()
+   {
+      var idx = Math.floor(Math.random() * this.numHex);
+      while (this.getHexType(idx) !== CAVE.EMPTY) idx = (idx + 1) % this.numHex;
+      return idx;
+   }
+   
    pointInRhombus(x, y)
    {
       var shearx = (x - 0.577 * y);

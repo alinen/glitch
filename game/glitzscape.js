@@ -572,7 +572,7 @@ function initObjects(gameState)
     });
 
     //--- game objects
-    var idx = findEmptyHex(); // todo: allow blood and other things in same cell?
+    var idx = hexBoard.findEmpty(); // todo: allow blood and other things in same cell?
     hexBoard.setHexType(idx, CAVE.BEAST);   
     var bloodcells = hexBoard.getNeighbors(idx);
     for (var i = 0; i < bloodcells.length; i++)
@@ -599,16 +599,20 @@ function initObjects(gameState)
        for (var j = 0; j < item.num; j++)
        {
           var npc = null;
-          if (item.type == CAVE.HEART)
+          if (item.type === CAVE.HEART || item.type === CAVE.STAR)
           {
-              npc = new Heart(item.type, item.respawnTime);
+              npc = new Item(item.type, item.respawnTime);
+          }
+          else if (item.type === CAVE.SPAWN)
+          {
+              npc = new Spawn(item.type, item.respawnTime);
           }
           else
           {
               npc = new NPC(item.type, item.respawnTime);
           }
 
-          var idx = findEmptyHex();
+          var idx = hexBoard.findEmpty();
           npc.placeInHex(idx);
           hexBoard.setHexType(idx,item.type);
 
@@ -655,7 +659,7 @@ function initObjects(gameState)
     npcs.push(lowerTeeth);     
 
     //-- player object
-    var idx = findEmptyHex();
+    var idx = hexBoard.findEmpty();
     player.placeInHex(idx);    
     player.init();
     objects.push(
@@ -668,15 +672,8 @@ function initObjects(gameState)
        texture: backgroundTex,
        enabled: true
     });
-
 }
 
-function findEmptyHex()
-{
-   var idx = Math.floor(Math.random() * hexBoard.numHex);
-   while (hexBoard.getHexType(idx) !== CAVE.EMPTY) idx = (idx + 1) % hexBoard.numHex;
-   return idx;
-}
 
 function drawScene() 
 {

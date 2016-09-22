@@ -20,14 +20,6 @@ class NPC extends MovingObject
 
    update(dt)
    {
-      /*if (!this.isMoving() || this.targetHex === -1)
-      {
-         var moves = hexBoard.getMoves(this.currentHex);
-         var diceRoll = Math.floor(Math.random() * moves.length);
-         var next = moves[diceRoll];
-         this.attemptMove(next);
-      }*/
-
       super.update(dt);
    }
 
@@ -37,7 +29,7 @@ class NPC extends MovingObject
    }
 }
 
-class Heart extends NPC
+class Item extends NPC
 {
    constructor(type, respawnTime)
    {
@@ -68,7 +60,6 @@ class Heart extends NPC
             this.active = true;
          }
       }
-
    }
 }
 
@@ -109,8 +100,42 @@ class Teeth extends NPC
             this.dir.y = 0;
          }
       }
-
    }
 }
 
+class Spawn extends NPC
+{
+   constructor(type, respawnTime)
+   {
+      super(type, respawnTime);
+      this.speed = 0.001;
+      this.scale.s = 0.35;      
+   }
 
+   reactTo(player)
+   {
+      if (this.active)
+      {
+         //this.active = false;
+         //this.timer = this.respawnTime;
+      }
+      else if (this.timer < 0)
+      {
+         super.reactTo(player);
+         this.timer = 2;
+      }      
+   }   
+
+   update(dt)
+   {
+      super.update(dt);
+      this.timer -= dt * 0.001;
+      if (!this.isMoving() && this.active && this.timer < 0)
+      {
+         var moves = hexBoard.getMoves(this.currentHex);
+         var diceRoll = Math.floor(Math.random() * moves.length);
+         var next = moves[diceRoll];         
+         this.attemptMove(next);
+      }
+   }
+};
