@@ -20,6 +20,7 @@ var shaderTexInvert;
 var shaderSolid;
 var shaderNoise;
 var backgroundTex;
+var teethTex;
 var mvMatrix = mat4.create();
 var mvMatrixStack = [];
 var pMatrix = mat4.create();
@@ -44,6 +45,8 @@ var paused = true;
 var gameOver = false;
 var titleScreen = null;
 var gameOverScreen = null;
+var lowerTeeth = null;
+var upperTeeth = null;
 
 function initGL(canvas) 
 {
@@ -184,6 +187,7 @@ function initTextureFromFile(filename)
 function loadTextures()
 {
    initTexture();
+   teethTex = initTextureFromFile("teeth.png");
 } 
 
 function mvPushMatrix() 
@@ -240,7 +244,7 @@ function handleKeyDown(event)
     }
     if (event.keyCode === 32) //spacebar
     {
-
+       endGame();
     }
   
     if (move) player.attemptMove(move);
@@ -623,6 +627,33 @@ function initObjects(gameState)
        }
     });
 
+
+    // monster teeth
+    upperTeeth = new Teeth(CAVE.TEETH, 0);
+    lowerTeeth = new Teeth(CAVE.TEETH, 0);
+    objects.push(
+    {    
+       geometry: GEOMETRY.QUAD,
+       translate : upperTeeth.translate,
+       rotate : upperTeeth.rotate,
+       scale : upperTeeth.scale,
+       shader : shaderTex,
+       texture: teethTex,
+       enabled: false
+    });    
+    objects.push(
+    {    
+       geometry: GEOMETRY.QUAD,
+       translate : lowerTeeth.translate,
+       rotate : lowerTeeth.rotate,
+       scale : lowerTeeth.scale,
+       shader : shaderTex,
+       texture: teethTex,
+       enabled: false
+    });    
+    npcs.push(upperTeeth); 
+    npcs.push(lowerTeeth);     
+
     //-- player object
     var idx = findEmptyHex();
     player.placeInHex(idx);    
@@ -638,18 +669,6 @@ function initObjects(gameState)
        enabled: true
     });
 
-
-    // monster teeth
-    objects.push(
-    {    
-       geometry: GEOMETRY.QUAD,
-       translate : hexBoard.gridPos,
-       rotate : null,
-       scale : null,
-       shader : shaderTex,
-       texture: teethTex,
-       enabled: true
-    });    
 }
 
 function findEmptyHex()
@@ -709,34 +728,29 @@ function drawScene()
 function endGame()
 {
    gameOver = true;
-   var upperTeeth = document.getElementById("upperTeeth");
-   var lowerTeeth = document.getElementById("lowerTeeth");
-   upperTeeth.show();
-   lowerTeeth.show();
+   player.active = false;
+   for (var i = 0; i < npcs.length; i++)
+   {
+      npcs[i].active = false;
+   }   
+   upperTeeth.start({x:0.0,y:20.0}, Math.PI, {x:0.0,y:-10.0});
+   lowerTeeth.start({x:0.0,y:-20.0}, Math.PI*2, {x:0.0,y:10.0});   
 }
 
 function animate() 
 {
    var timeNow = new Date().getTime();
-   if (!gameOver)
+   if (lastTime != 0 && !paused) 
    {
-      if (lastTime != 0 && !paused) 
+      var dt = timeNow - lastTime;
+      time += dt * 0.00005;
+      player.update(dt);
+      for (var i = 0; i < npcs.length; i++)
       {
-         var dt = timeNow - lastTime;
-         time += dt * 0.00005;
-         player.update(dt);
-         for (var i = 0; i < npcs.length; i++)
-         {
-            npcs[i].update(dt);
-         }
+         npcs[i].update(dt);
       }
-      lastTime = timeNow;
    }
-   else
-   {
-      var upperTeeth = document.getElementById("upperTeeth");
-      var lowerTeeth = document.getElementById("lowerTeeth");
-   }
+   lastTime = timeNow;
 }
 
 function updateGame()

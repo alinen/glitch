@@ -72,3 +72,45 @@ class Heart extends NPC
    }
 }
 
+class Teeth extends NPC
+{
+   constructor(type, respawnTime)
+   {
+      super(type, respawnTime);
+      this.scale.s = 10.0;
+      this.speed = 0.0005;
+      this.targetDist = 0;
+      this.startpos = {x:0,y:0};
+      this.translate.z = -5.0;
+   }
+   
+   start(startpos, startrot, vel)
+   {
+      this.dir = vel;
+      this.startpos = startpos;
+      this.pos.x = startpos.x;
+      this.pos.y = startpos.y;
+      this.rotate.r = startrot;
+      this.active = true;
+      this.startpos = startpos;
+   }
+
+   update(dt)
+   {
+      super.update(dt);
+
+      if (this.active)
+      {
+        // console.log(this.translate.x+" "+this.translate.y+" "+this.dir.y+" "+this.pos.y);
+         if ((this.startpos.y < 0 && this.pos.y > -10) ||
+             (this.startpos.y > 0 && this.pos.y < 10))
+         {
+            this.dir.x = 0;
+            this.dir.y = 0;
+         }
+      }
+
+   }
+}
+
+

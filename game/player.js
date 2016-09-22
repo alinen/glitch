@@ -25,6 +25,8 @@ class Player extends MovingObject
 
    update(dt)
    {
+      if (this.isDead) return; // can't move
+
       super.update(dt);
 
       if (Math.abs(this.dir.y) > 0.0 || Math.abs(this.dir.x) > 0.0)

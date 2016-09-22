@@ -7,7 +7,8 @@ var CAVE =
    ORB: 4,
    HEART: 5,
    SPAWN: 6,
-   PLAYER: 7
+   PLAYER: 7,
+   TEETH: 8
 }
 
 class MazeNode
