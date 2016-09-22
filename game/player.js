@@ -38,26 +38,30 @@ class Player extends MovingObject
    _reachedTarget(idx)
    {
       hexBoard.showHexById(idx, 1.0);
-      var npc = lookupNPC(idx);
-      if (npc && npc.active)
+      var type = hexBoard.getHexType(idx);
+      if (type === CAVE.BEAST)
       {
-         if (npc.type == CAVE.SPAWN)
+         this.health = 0;
+         this.isDead = true;
+         console.log("DIE");
+      }      
+      else
+      {
+         var npc = lookupNPC(idx);
+         if (npc && npc.active)
          {
-            this.health -= gameState.spawnDamage;
-         }
-         else if (npc.type == CAVE.HEART)
-         {
-            this.health = gameState.health; // reset health
-         }
-         else if (npc.type === CAVE.BEAST)
-         {
-            this.health = 0;
-            this.isDead = true;
-         }
-      }
-      
-      if (npc) npc.reactTo(this);         
+            if (npc.type == CAVE.SPAWN)
+            {
+               this.health -= gameState.spawnDamage;
+            }
+            else if (npc.type == CAVE.HEART)
+            {
+               this.health = gameState.health; // reset health
+            }
 
+         }
+         if (npc) npc.reactTo(this);         
+      }
  
    }
 
