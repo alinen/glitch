@@ -1,8 +1,9 @@
 
 class MovingObject
 {
-   constructor()
+   constructor(type)
    {
+      this.type = type;
       this.speed = 0.005;
       this.pos = {x:0, y:0};
       this.translate = {x:0,y:0,z:-5},
@@ -57,6 +58,7 @@ class MovingObject
             this.currentHex = this.targetHex;
             this.targetHex = -1;
             this.pos = target;
+            hexBoard.setHexType(this.currentHex, this.type);
             //console.log("update "+this.currentHex+" "+this.targetHex+" "+this.nextHex);
          }
       }
@@ -79,6 +81,7 @@ class MovingObject
          {
             this.dir = move.dir;
             this.targetHex = nextIdx;
+            hexBoard.setHexType(this.currentHex, CAVE.EMPTY);
          }
       }
    }

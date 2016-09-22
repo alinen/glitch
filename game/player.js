@@ -3,7 +3,7 @@ class Player extends MovingObject
 {
    constructor() 
    {
-      super();
+      super(CAVE.PLAYER);
       this.arrowCount = 1;
       this.isDead = false;
       this.health = 0;

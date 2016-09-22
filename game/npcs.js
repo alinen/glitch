@@ -2,9 +2,8 @@ class NPC extends MovingObject
 {
    constructor(type, respawnTime)
    {
-      super();
+      super(type);
 
-      this.type = type;
       this.spawnIdx = -1;
       this.respawnTime = respawnTime;
       this.active = false;
