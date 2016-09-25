@@ -67,34 +67,56 @@ class Player extends MovingObject
    previewDir(worldPoint)
    {
       if (this.targetHex !== -1) return; // already going somewhere
-
       var hexIdx = hexBoard.pointToId(worldPoint);
-      if (!hexBoard.isNeighbor(this.currentHex, hexIdx)) return; // no work to do
+      if (hexIdx === this.currentHex) return; // no work to do
 
-      var hexCenter = hexBoard.getHexCenterById(this.currentHex);
-      var dirx = worldPoint.x - hexCenter.x;
-      var diry = worldPoint.y - hexCenter.y;
-      var len = Math.sqrt(dirx*dirx + diry*diry);
-      var ndirx = dirx/len;
-      var ndiry = diry/len;
-
-      var minAngle = Math.PI*4;
-      var mini = -1;
-      for (var i = 0; i < NEIGHBORS.length; i++)
+      var isVisible = hexBoard.isVisibleHex(hexIdx);
+      if (!isVisible)
       {
-         var angle = Math.acos(ndirx * NEIGHBORS[i].dir.x + ndiry * NEIGHBORS[i].dir.y);
-         if (angle < minAngle)
+         var visibleNeighbor = -1;
+         var allNeighbors = hexBoard.getNeighbors(hexIdx);
+         for (var i = 0; i < allNeighbors.length; i++)
          {
-            mini = i;
-            minAngle = angle;
+            var neighborIdx = allNeighbors[i];
+            if (hexBoard.isNeighbor(hexIdx, neighborIdx) && hexBoard.isVisibleHex(neighborIdx))
+            {
+               visibleNeighbor = neighborIdx;
+               break;
+            }
+         }
+         if (visibleNeighbor !== -1) 
+         {
+            var path = hexBoard.computePath(this.currentHex, visibleNeighbor, true);
+            path.push(hexIdx);
+            this.followPath(path);
+         }
+      }
+      else if (isVisible)
+      {
+         var path = hexBoard.computePath(this.currentHex, hexIdx, true);
+         this.followPath(path);
+      }
+      else // show direction with the mouse
+      {
+         var dir = hexBoard.getDir(this.currentHex, hexIdx);
+         var minAngle = Math.PI*4;
+         var mini = -1;
+         for (var i = 0; i < NEIGHBORS.length; i++)
+         {
+            var angle = Math.acos(dir.x * NEIGHBORS[i].dir.x + dir.y * NEIGHBORS[i].dir.y);
+            if (angle < minAngle)
+            {
+               mini = i;
+               minAngle = angle;
+            }
+         }
+
+         if (mini !== -1) 
+         {
+             this.rotate.r = Math.atan2(-NEIGHBORS[mini].dir.x, NEIGHBORS[mini].dir.y);
          }
       }
 
-      if (mini !== -1) 
-      {
-          this.rotate.r = Math.atan2(-NEIGHBORS[mini].dir.x, NEIGHBORS[mini].dir.y);
-          this.attemptMove(NEIGHBORS[mini]);
-      }
    }
 }
    

@@ -237,17 +237,10 @@ function handleMouseDown(event)
 
 function handleKeyDown(event) 
 {
-    var move = null;
     if (event.keyCode === 80) //p
     {
        paused = !paused;
     }
-    if (event.keyCode === 32) //spacebar
-    {
-       endGame();
-    }
-  
-    if (move) player.attemptMove(move);
 }
 
 function createGlBuffer(values, itemSize, numItems, type)
@@ -373,8 +366,6 @@ function initBuffers()
        textureDynamic : null,
        primitive : gl.TRIANGLES
     });    
-
-    console.log("TETS: "+vertices.length/3+" "+colors.length/4+" "+texs.length/2+" "+vertices.length);
 
     //- SPAWN
     var vertices = [
@@ -798,11 +789,6 @@ function webGLStart()
 
     gameState = new GameState();
     initObjects(gameState);
-
-    //var p1 = hexCenterById(idx);
-    //var idx2 = pointToHexId(p1);
-    //var p2 = hexCenterById(idx2);
-    //console.log("TEST "+idx+" "+p1+" "+idx2+" "+p2);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); 

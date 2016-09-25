@@ -215,8 +215,103 @@ class HexBoard
       }
    }
 
-   getPath(startIdx, targetIdx)
+   
+
+   getDir(startIdx, targetIdx)
    {
+      var startCenter = hexBoard.getHexCenterById(startIdx);
+      var targetCenter = this.getHexCenterById(targetIdx);
+
+      var dirx = targetCenter.x - startCenter.x;
+      var diry = targetCenter.y - startCenter.y;
+      var len = Math.sqrt(dirx*dirx + diry*diry);
+      var ndirx = dirx/len;
+      var ndiry = diry/len;
+      return {x:ndirx, y:ndiry};
+   }
+
+   computeDistance(startIdx, targetIdx)
+   {
+      var startCenter = this.getHexCenterById(startIdx);
+      var targetCenter = this.getHexCenterById(targetIdx);
+
+      var distance = Math.sqrt( 
+            (startCenter.x-targetCenter.x)*(startCenter.x-targetCenter.x) +
+            (startCenter.y-targetCenter.y)*(startCenter.y-targetCenter.y) 
+            );
+      return distance;
+   }
+
+   computePath(startIdx, targetIdx, visibleOnly)
+   {
+      var prevNode = [];
+      var g = []; // real path len
+      var h = []; // estimated path len
+      for (var i = 0; i < this.maze.length; i++)
+      {
+         prevNode.push(null);
+         g.push(Infinity);
+         h.push(Infinity);
+      }
+
+      // find path from target to start (assumes all paths are bidirectional)
+      var Q = [targetIdx]; // open set
+      g[targetIdx] = 0;
+      h[targetIdx] = this.computeDistance(startIdx, targetIdx);
+      while (Q.length > 0)
+      {
+         var mini = 0;
+         var least = h[Q[0]];
+         for (var i = 1; i < Q.length; i++) // todo: use priority queue
+         {
+            if (h[Q[i]] < least)
+            {
+               mini = i;
+               least = h[Q[i]];
+            }
+         }
+
+         var currentIdx = Q[mini];
+         if (currentIdx === startIdx) break;
+         //console.log("current "+currentIdx+" "+least);
+
+         Q.splice(mini,1);
+         var allNeighbors = this.getNeighbors(currentIdx);
+         for (var n = 0; n < allNeighbors.length; n++)
+         {
+            var neighborIdx = allNeighbors[n];
+            if (visibleOnly && this.isVisibleHex(neighborIdx) === false)
+            {
+               continue;
+            }
+
+            if (this.isNeighbor(currentIdx, neighborIdx))
+            {
+               if (g[neighborIdx] === Infinity)
+               {
+                  Q.push(neighborIdx);
+               }
+               var realDistance = g[currentIdx] + this.computeDistance(currentIdx, neighborIdx);
+               if (realDistance < g[neighborIdx])
+               {
+                  g[neighborIdx] = realDistance;
+                  prevNode[neighborIdx] = currentIdx;
+                  h[neighborIdx] = realDistance + this.computeDistance(neighborIdx, startIdx);
+               }
+               //console.log("process neighbor "+neighborIdx+" "+g[neighborIdx]+" "+h[neighborIdx]+" "+prevNode[neighborIdx]);
+            }
+         }
+      }
+
+      var path = [startIdx];
+      var currentIdx = startIdx;
+      while (currentIdx !== targetIdx)
+      {
+         path.push(prevNode[currentIdx]);
+         currentIdx = prevNode[currentIdx];
+      }
+
+      return path;
    }
 
    shuffle(array) // Fisher–Yates_shuffle
@@ -320,6 +415,13 @@ class HexBoard
          }
       }
       return moves;
+   }
+
+   isVisibleHex(idx)
+   {
+      var offset = idx * 18 * 4; // idx * #hexvertices * numcolorchannels
+      var i = 0; // just look at first one
+      return (this.colors[offset+i*4+3] > 0);
    }
 
    showHexById(idx, alpha)

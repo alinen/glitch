@@ -12,6 +12,19 @@ class MovingObject
       this.dir = {x:0, y:0};
       this.currentHex = -1;
       this.targetHex = -1;
+      this.path = []
+      this.pathIdx = -1;
+   }
+
+   followPath(p)
+   {
+      this.path = p;
+      if (this.currentHex !== p[0])
+      {
+         console.log("WARNING path start is not current position");
+      }
+      this.targetHex = this.path[0];
+      this.pathIdx = 0;
    }
 
    placeInHex(hexIdx)
@@ -53,13 +66,21 @@ class MovingObject
          if (this.passedTarget(target, 0.01))
          {
             this._reachedTarget(this.targetHex);
-   
-            this.dir = {x:0,y:0};
-            this.currentHex = this.targetHex;
-            this.targetHex = -1;
             this.pos = target;
+            this.currentHex = this.targetHex;
             hexBoard.setHexType(this.currentHex, this.type);
-            //console.log("update "+this.currentHex+" "+this.targetHex+" "+this.nextHex);
+
+            this.pathIdx++;
+            if (this.pathIdx < this.path.length)
+            {
+               this.targetHex = this.path[this.pathIdx];
+               this.dir = hexBoard.getDir(this.currentHex, this.targetHex);
+            }
+            else
+            {
+               this.dir = {x:0,y:0};
+               this.targetHex = -1;
+            }
          }
       }
    
