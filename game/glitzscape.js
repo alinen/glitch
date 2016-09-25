@@ -30,6 +30,8 @@ var objects = [];
 // game state
 var lastMouseX = null;
 var lastMouseY = null;
+var lastMovement = 0;
+var stopThreshold = 20; // milliseconds
 var worldSize = 10.0;
 var lastTime = 0;
 var player = new Player();
@@ -222,6 +224,7 @@ function handleMouseMove(event)
     var sceneY = worldSize - (y * worldSize * 2.0)/canvas.height;
     //console.log(sceneX+" "+sceneY);
 
+    lastMovement = new Date().getTime();
     lastMouseX = sceneX;
     lastMouseY = sceneY;
 }
@@ -743,7 +746,11 @@ function animate()
 
 function updateGame()
 {
-   player.previewDir({x:lastMouseX, y:lastMouseY});
+   var dtMovement = Math.abs(lastTime - lastMovement);
+   if (dtMovement > stopThreshold)
+   {
+      player.move({x:lastMouseX, y:lastMouseY});
+   }
    if (player.isDead && !gameOver) endGame();
    
    for (var i = 0; i < npcs.length; i++)

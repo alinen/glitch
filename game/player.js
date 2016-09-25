@@ -64,7 +64,7 @@ class Player extends MovingObject
  
    }
 
-   previewDir(worldPoint)
+   move(worldPoint)
    {
       if (this.targetHex !== -1) return; // already going somewhere
       var hexIdx = hexBoard.pointToId(worldPoint);
