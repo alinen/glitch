@@ -236,6 +236,13 @@ function handleMouseDown(event)
       $("#title").fadeOut();
       paused = false;
    }
+   else
+   {
+      if (player.fireMode)
+      {
+         player.fire();
+      }
+   }
 }
 
 function handleKeyDown(event) 
@@ -243,6 +250,10 @@ function handleKeyDown(event)
     if (event.keyCode === 80) //p
     {
        paused = !paused;
+    }
+    else if (event.keyCode === 32) //spacebar
+    {
+       player.enableFire();
     }
 }
 
@@ -592,19 +603,7 @@ function initObjects(gameState)
     {
        for (var j = 0; j < item.num; j++)
        {
-          var npc = null;
-          if (item.type === CAVE.HEART || item.type === CAVE.STAR)
-          {
-              npc = new Item(item.type, item.respawnTime);
-          }
-          else if (item.type === CAVE.SPAWN)
-          {
-              npc = new Spawn(item.type, item.respawnTime);
-          }
-          else
-          {
-              npc = new NPC(item.type, item.respawnTime);
-          }
+          var npc = new Item(item.type, item.respawnTime);
 
           var idx = hexBoard.findEmpty();
           npc.placeInHex(idx);
@@ -749,7 +748,7 @@ function updateGame()
    var dtMovement = Math.abs(lastTime - lastMovement);
    if (dtMovement > stopThreshold)
    {
-      player.move({x:lastMouseX, y:lastMouseY});
+      player.input({x:lastMouseX, y:lastMouseY});
    }
    if (player.isDead && !gameOver) endGame();
    

@@ -215,8 +215,6 @@ class HexBoard
       }
    }
 
-   
-
    getDir(startIdx, targetIdx)
    {
       var startCenter = hexBoard.getHexCenterById(startIdx);

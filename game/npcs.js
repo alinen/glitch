@@ -125,16 +125,20 @@ class Spawn extends NPC
       }      
    }   
 
+   _reachedTarget(idx)
+   {
+      this.timer = 10; 
+   }   
+
    update(dt)
    {
       super.update(dt);
       this.timer -= dt * 0.001;
       if (!this.isMoving() && this.active && this.timer < 0)
-      {
-         var moves = hexBoard.getMoves(this.currentHex);
-         var diceRoll = Math.floor(Math.random() * moves.length);
-         var next = moves[diceRoll];         
-         this.attemptMove(next);
+      {         
+         var nextHex = Math.floor(Math.random() *  hexBoard.numHex);
+         var path = hexBoard.computePath(this.currentHex, nextHex);
+         this.followPath(path);
       }
    }
 };

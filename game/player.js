@@ -4,9 +4,9 @@ class Player extends MovingObject
    constructor() 
    {
       super(CAVE.PLAYER);
-      this.arrowCount = 1;
       this.isDead = false;
       this.health = 0;
+      this.fireMode = false;
    }
 
    init()
@@ -23,16 +23,17 @@ class Player extends MovingObject
       this.speed = 0.0075;
    }
 
+
    update(dt)
    {
       if (this.isDead) return; // can't move
-
-      super.update(dt);
+      if (this.fireMode) return;
 
       if (Math.abs(this.dir.y) > 0.0 || Math.abs(this.dir.x) > 0.0)
       {
          this.rotate.r = Math.atan2(-this.dir.x, this.dir.y);
-      }
+      }      
+      super.update(dt);
    }
 
    _reachedTarget(idx)
@@ -52,12 +53,12 @@ class Player extends MovingObject
             if (npc.type == CAVE.SPAWN)
             {
                this.health -= gameState.spawnDamage;
+               if (this.health === 0) this.isDead = true;
             }
             else if (npc.type == CAVE.HEART)
             {
                this.health = gameState.health; // reset health
             }
-
          }
          if (npc) npc.reactTo(this);         
       }
@@ -66,7 +67,9 @@ class Player extends MovingObject
 
    move(worldPoint)
    {
+      // todo: allow repathing
       if (this.targetHex !== -1) return; // already going somewhere
+
       var hexIdx = hexBoard.pointToId(worldPoint);
       if (hexIdx === this.currentHex) return; // no work to do
 
@@ -95,28 +98,59 @@ class Player extends MovingObject
       {
          var path = hexBoard.computePath(this.currentHex, hexIdx, true);
          this.followPath(path);
-      }
-      else // show direction with the mouse
+      }      
+   }
+
+   aim(worldPoint)
+   {
+      var startCenter = hexBoard.getHexCenterById(this.currentHex);
+
+      var dirx = worldPoint.x - startCenter.x;
+      var diry = worldPoint.y - startCenter.y;
+      var len = Math.sqrt(dirx*dirx + diry*diry);
+      var ndirx = dirx/len;
+      var ndiry = diry/len;
+
+      var minAngle = Math.PI*4;
+      var mini = -1;
+      for (var i = 0; i < NEIGHBORS.length; i++)
       {
-         var dir = hexBoard.getDir(this.currentHex, hexIdx);
-         var minAngle = Math.PI*4;
-         var mini = -1;
-         for (var i = 0; i < NEIGHBORS.length; i++)
+         var angle = Math.acos(ndirx * NEIGHBORS[i].dir.x + ndiry * NEIGHBORS[i].dir.y);
+         if (angle < minAngle)
          {
-            var angle = Math.acos(dir.x * NEIGHBORS[i].dir.x + dir.y * NEIGHBORS[i].dir.y);
-            if (angle < minAngle)
-            {
-               mini = i;
-               minAngle = angle;
-            }
-         }
-
-         if (mini !== -1) 
-         {
-             this.rotate.r = Math.atan2(-NEIGHBORS[mini].dir.x, NEIGHBORS[mini].dir.y);
+            mini = i;
+            minAngle = angle;
          }
       }
 
+      if (mini !== -1) 
+      {
+         this.rotate.r = Math.atan2(-NEIGHBORS[mini].dir.x, NEIGHBORS[mini].dir.y);
+         this.dir = {x:ndirx,y:ndiry};
+      }
+   }
+
+   enableFire()
+   {
+      this.fireMode = true;
+   }
+
+   fire()
+   {
+      this.fireMode = false;
+      this.dir = {x:0,y:0};
+   }
+
+   input(worldPoint)
+   {
+      if (this.fireMode)
+      {
+         this.aim(worldPoint);
+      }
+      else
+      {
+         this.move(worldPoint);
+      }
    }
 }
    

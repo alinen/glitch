@@ -29,13 +29,13 @@ class GameState
          geom: GEOMETRY.SPAWN
       },
       {
-         num: 2,
+         num: 0,
          respawnTime: 10,
          type: CAVE.STAR,
          geom: GEOMETRY.STAR
       },
       {
-         num: 1,
+         num: 2,
          respawnTime: 10,
          type: CAVE.HEART,
          geom: GEOMETRY.HEART
