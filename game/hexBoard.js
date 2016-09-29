@@ -213,9 +213,14 @@ class HexBoard
             }
          }
       }
-   }
 
-   
+      // reset visited state for player to explore
+      for (var i = 0; i < this.numHex; i++)
+      {
+         this.maze[i].visited = false;
+      }
+      
+   }
 
    getDir(startIdx, targetIdx)
    {
@@ -337,6 +342,22 @@ class HexBoard
       return false;
    }
 
+   hasVisibleNeighbor(hexIdx)
+   {
+      var visibleNeighbor = -1;
+      var allNeighbors = this.getNeighbors(hexIdx);
+      for (var i = 0; i < allNeighbors.length; i++)
+      {
+         var neighborIdx = allNeighbors[i];
+         if (this.isNeighbor(hexIdx, neighborIdx) && this.isVisibleHex(neighborIdx))
+         {
+            visibleNeighbor = neighborIdx;
+            break;
+         }
+      }
+      return visibleNeighbor;
+   }
+
    getHexSidesById(idx)
    {
       var sides = [];
@@ -419,14 +440,18 @@ class HexBoard
 
    isVisibleHex(idx)
    {
-      var offset = idx * 18 * 4; // idx * #hexvertices * numcolorchannels
-      var i = 0; // just look at first one
-      return (this.colors[offset+i*4+3] > 0);
+      return this.maze[idx].visited;
    }
 
-   showHexById(idx, alpha)
+   showHexById(idx)
    {
-      var showBlood = (this.maze[idx].type === CAVE.BEAST || this.maze[idx].type === CAVE.BLOOD);
+      this.maze[idx].visited = true;
+      this.setHexAlphaById(idx,1);
+   }
+
+   setHexAlphaById(idx, alpha, uncovered = true)
+   {
+      var showBlood = (this.maze[idx].type === CAVE.BEAST || this.maze[idx].type === CAVE.BLOOD) && uncovered;
       var offset = idx * 18 * 4; // idx * #hexvertices * numcolorchannels
       for (var i = 0; i < 18; i++)
       {
@@ -438,6 +463,8 @@ class HexBoard
          }
          this.colors[offset+i*4+3] = alpha;
       } 
+
+      if (!uncovered) return; // don't change bridges unless the player uncovers this hex
 
       var node = this.maze[idx];
       for (var s = 0; s < NEIGHBORS.length; s++) 

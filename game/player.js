@@ -20,13 +20,11 @@ class Player extends MovingObject
       super.placeInHex(hexIdx);
       this.scale.s = hexBoard.b * 0.25;
       this.translate.z = -4.0;
-      this.speed = 0.0075;
+      this.speed = 0.01;
    }
 
    update(dt)
    {
-      if (this.isDead) return; // can't move
-
       super.update(dt);
 
       if (Math.abs(this.dir.y) > 0.0 || Math.abs(this.dir.x) > 0.0)
@@ -37,7 +35,7 @@ class Player extends MovingObject
 
    _reachedTarget(idx)
    {
-      hexBoard.showHexById(idx, 1.0);
+      hexBoard.showHexById(idx);
       var type = hexBoard.getHexType(idx);
       if (type === CAVE.BEAST)
       {
@@ -73,17 +71,7 @@ class Player extends MovingObject
       var isVisible = hexBoard.isVisibleHex(hexIdx);
       if (!isVisible)
       {
-         var visibleNeighbor = -1;
-         var allNeighbors = hexBoard.getNeighbors(hexIdx);
-         for (var i = 0; i < allNeighbors.length; i++)
-         {
-            var neighborIdx = allNeighbors[i];
-            if (hexBoard.isNeighbor(hexIdx, neighborIdx) && hexBoard.isVisibleHex(neighborIdx))
-            {
-               visibleNeighbor = neighborIdx;
-               break;
-            }
-         }
+         var visibleNeighbor = hexBoard.hasVisibleNeighbor(hexIdx);
          if (visibleNeighbor !== -1) 
          {
             var path = hexBoard.computePath(this.currentHex, visibleNeighbor, true);
