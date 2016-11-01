@@ -30,8 +30,6 @@ var objects = [];
 // game state
 var lastMouseX = null;
 var lastMouseY = null;
-var lastMovement = 0;
-var stopThreshold = 20; // milliseconds
 var worldSize = 10.0;
 var lastTime = 0;
 var player = new Player();
@@ -49,6 +47,7 @@ var titleScreen = null;
 var gameOverScreen = null;
 var lowerTeeth = null;
 var upperTeeth = null;
+var highlightIdx = -1;
 
 function initGL(canvas) 
 {
@@ -224,7 +223,18 @@ function handleMouseMove(event)
     var sceneY = worldSize - (y * worldSize * 2.0)/canvas.height;
     //console.log(sceneX+" "+sceneY);
 
-    lastMovement = new Date().getTime();
+    if (highlightIdx !== -1 && !hexBoard.isVisibleHex(highlightIdx))
+    {
+       hexBoard.setHexAlphaById(highlightIdx, 0, false);
+    }
+
+    var idx = hexBoard.pointToId({x:sceneX,y:sceneY});
+    if (idx !== -1 && !hexBoard.isVisibleHex(idx) && hexBoard.hasVisibleNeighbor(idx) !== -1)
+    {
+       hexBoard.setHexAlphaById(idx, 0.1, false);       
+       highlightIdx = idx;
+    }
+
     lastMouseX = sceneX;
     lastMouseY = sceneY;
 }
@@ -235,6 +245,10 @@ function handleMouseDown(event)
    {
       $("#title").fadeOut();
       paused = false;
+   }
+   else
+   {
+      player.move({x:lastMouseX, y:lastMouseY});
    }
 }
 
@@ -592,20 +606,7 @@ function initObjects(gameState)
     {
        for (var j = 0; j < item.num; j++)
        {
-          var npc = null;
-          if (item.type === CAVE.HEART || item.type === CAVE.STAR)
-          {
-              npc = new Item(item.type, item.respawnTime);
-          }
-          else if (item.type === CAVE.SPAWN)
-          {
-              npc = new Spawn(item.type, item.respawnTime);
-          }
-          else
-          {
-              npc = new NPC(item.type, item.respawnTime);
-          }
-
+          var npc = new Item(item.type, item.respawnTime); 
           var idx = hexBoard.findEmpty();
           npc.placeInHex(idx);
           hexBoard.setHexType(idx,item.type);
@@ -746,12 +747,6 @@ function animate()
 
 function updateGame()
 {
-   var dtMovement = Math.abs(lastTime - lastMovement);
-   if (dtMovement > stopThreshold)
-   {
-      player.move({x:lastMouseX, y:lastMouseY});
-   }
-   if (player.isDead && !gameOver) endGame();
    
    for (var i = 0; i < npcs.length; i++)
    {
