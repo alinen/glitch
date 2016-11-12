@@ -12,7 +12,7 @@ class MovingObject
       this.dir = {x:0, y:0};
       this.currentHex = -1;
       this.targetHex = -1;
-      this.path = []
+      this.path = [];
       this.pathIdx = -1;
    }
 

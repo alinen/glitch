@@ -1,18 +1,68 @@
+var PLAYER_MODE = 
+{
+   NORMAL: 0,
+   DEAD: 1,
+   FIRE: 2,
+   POWERED: 3,
+   VICTOR: 4
+}
+
+class Bullet extends MovingObject
+{
+   constructor() 
+   {
+      super(CAVE.BULLET);
+      this.active = false;
+   }
+
+   update(dt)
+   {
+      if (this.active)
+      {
+         console.log("update bullet");
+      }
+      super.update(dt);
+   }
+
+   _reachedTarget(idx)
+   {
+      var npc = lookupNPC(idx);
+      if (npc && npc.active)
+      {
+         if (npc.type === CAVE.BEAST)
+         {
+            // we win! 
+            player.mode = PLAYER_MODE.VICTOR;
+         }
+         else if (hexBoard.getHexType(idx) === CAVE.BLOOD)
+         {
+            player.kill();
+         }
+         else if (npc.type === CAVE.SPAWN)
+         {
+            npc.kill();
+         }
+      }
+      this.active = false;
+   }
+}
 
 class Player extends MovingObject
 {
    constructor() 
    {
       super(CAVE.PLAYER);
-      this.isDead = false;
       this.health = 0;
-      this.fireMode = false;
+      this.mode = PLAYER_MODE.NORMAL;
+      this.bullet = new Bullet();
    }
 
    init()
    {
       this.health = gameState.health;
-      this.isDead = false;
+      this.mode = PLAYER_MODE.NORMAL;
+      this.speed = 0.01;
+      this.bullet.actve = false;
    }
 
    placeInHex(hexIdx)
@@ -20,32 +70,33 @@ class Player extends MovingObject
       super.placeInHex(hexIdx);
       this.scale.s = hexBoard.b * 0.25;
       this.translate.z = -4.0;
-      this.speed = 0.0075;
    }
-
 
    update(dt)
    {
-      if (this.isDead) return; // can't move
-      if (this.fireMode) return;
+      // ASN TODO: in god mode right now
+      //if (this.mode == PLAYER_MODE.DEAD) return; // can't move
+      //if (this.mode == PLAYER_MODE.FIRE) return;
 
-      if (Math.abs(this.dir.y) > 0.0 || Math.abs(this.dir.x) > 0.0)
+      if (this.mode == PLAYER_MODE.NORMAL)
       {
-         this.rotate.r = Math.atan2(-this.dir.x, this.dir.y);
-      }      
-      super.update(dt);
+         super.update(dt);
+         if (Math.abs(this.dir.y) > 0.0 || Math.abs(this.dir.x) > 0.0)
+         {
+            this.rotate.r = Math.atan2(-this.dir.x, this.dir.y);
+         }      
+      }
    }
 
    _reachedTarget(idx)
    {
-      hexBoard.showHexById(idx, 1.0);
+      hexBoard.showHexById(idx);
       var type = hexBoard.getHexType(idx);
       if (type === CAVE.BEAST)
       {
-         this.health = 0;
-         this.isDead = true;
+         kill();
       }      
-      else
+      else // ASN TODO: Do real intersection test
       {
          var npc = lookupNPC(idx);
          if (npc && npc.active)
@@ -53,7 +104,7 @@ class Player extends MovingObject
             if (npc.type == CAVE.SPAWN)
             {
                this.health -= gameState.spawnDamage;
-               if (this.health === 0) this.isDead = true;
+               if (this.health === 0) this.mode = PLAYER_MODE.DEAD;
             }
             else if (npc.type == CAVE.HEART)
             {
@@ -76,17 +127,7 @@ class Player extends MovingObject
       var isVisible = hexBoard.isVisibleHex(hexIdx);
       if (!isVisible)
       {
-         var visibleNeighbor = -1;
-         var allNeighbors = hexBoard.getNeighbors(hexIdx);
-         for (var i = 0; i < allNeighbors.length; i++)
-         {
-            var neighborIdx = allNeighbors[i];
-            if (hexBoard.isNeighbor(hexIdx, neighborIdx) && hexBoard.isVisibleHex(neighborIdx))
-            {
-               visibleNeighbor = neighborIdx;
-               break;
-            }
-         }
+         var visibleNeighbor = hexBoard.hasVisibleNeighbor(hexIdx);
          if (visibleNeighbor !== -1) 
          {
             var path = hexBoard.computePath(this.currentHex, visibleNeighbor, true);
@@ -99,6 +140,20 @@ class Player extends MovingObject
          var path = hexBoard.computePath(this.currentHex, hexIdx, true);
          this.followPath(path);
       }      
+   }
+
+   fire(worldPoint)
+   {
+      var hexIdx = hexBoard.pointToId(worldPoint);
+      if (hexIdx === this.currentHex) return; // no work to do
+
+      if (hexBoard.isNeighbor(this.currentHex, hexIdx))
+      {
+         var path = hexBoard.computePath(this.currentHex, hexIdx);
+         this.bullet.active = true;
+         this.bullet.placeInHex(this.currentHex);
+         this.bullet.followPath(path);
+      }
    }
 
    aim(worldPoint)
@@ -130,27 +185,60 @@ class Player extends MovingObject
       }
    }
 
-   enableFire()
+   enableFireMode(on)
    {
-      this.fireMode = true;
+      if (on) this.mode = PLAYER_MODE.FIRE;
+      else this.mode = PLAYER_MODE.NORMAL;
+      console.log("MODE: "+this.mode);
    }
 
-   fire()
+   getFireMode()
    {
-      this.fireMode = false;
-      this.dir = {x:0,y:0};
+      return this.mode === PLAYER_MODE.FIRE;
+   }
+
+   isDead() 
+   {
+      return this.mode === PLAYER_MODE.DEAD;
+   }
+
+   kill()
+   {
+      this.health = 0;
+      this.mode = PLAYER_MODE.DEAD;
+   }
+
+   hover(worldPoint)
+   {
+      if (this.mode === PLAYER_MODE.FIRE)
+      {
+         this.aim(worldPoint);
+      }
    }
 
    input(worldPoint)
    {
-      if (this.fireMode)
+      var hexIdx = hexBoard.pointToId(worldPoint);
+      if (hexIdx === this.currentHex) 
+      {
+         this.enableFireMode(!this.getFireMode()); // enable fire mode
+         if (!this.getFireMode()) this.clearDir();
+      }
+
+      if (this.mode === PLAYER_MODE.FIRE)
       {
          this.aim(worldPoint);
+         this.fire(worldPoint);
       }
       else
       {
          this.move(worldPoint);
       }
    }
+
+   isMoving()
+   {
+      return (this.mode === PLAYER_MODE.NORMAL && (this.dir.x > 0.0001 || this.dir.y > 0.0001));
+   }   
 }
    
