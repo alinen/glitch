@@ -440,6 +440,7 @@ class HexBoard
 
    isVisibleHex(idx)
    {
+      if (idx < 0 || idx > this.maze.length) return false;
       return this.maze[idx].visited;
    }
 

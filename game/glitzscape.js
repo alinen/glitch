@@ -231,7 +231,7 @@ function handleMouseMove(event)
     var idx = hexBoard.pointToId({x:sceneX,y:sceneY});
     if (idx !== -1 && !hexBoard.isVisibleHex(idx) && hexBoard.hasVisibleNeighbor(idx) !== -1)
     {
-       hexBoard.setHexAlphaById(idx, 0.1, false);       
+       hexBoard.setHexAlphaById(idx, 0.5, false);       
        highlightIdx = idx;
     }
 
