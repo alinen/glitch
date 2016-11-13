@@ -1,16 +1,17 @@
 
-class MovingObject
+class MovingObject extends GameObject
 {
-   constructor(type)
+   constructor()
    {
-      this.type = type;
-      this.speed = 0.005;
+      super();
+
       this.pos = {x:0, y:0};
-      this.translate = {x:0,y:0,z:-5},
-      this.scale = {s:1},
-      this.rotate = {r:0},
+      this.translate = {x:0,y:0,z:-5};
+      this.scale = 1;
+      this.rotate = 0;
+
+      this.speed = 0.005;
       this.dir = {x:0, y:0};
-      this.currentHex = -1;
       this.targetHex = -1;
       this.path = [];
       this.pathIdx = -1;
@@ -57,6 +58,8 @@ class MovingObject
 
    update(dt)
    {
+      super.update(dt);
+
       this.pos.x += dt * this.dir.x * this.speed;
       this.pos.y += dt * this.dir.y * this.speed;
 

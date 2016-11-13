@@ -1,14 +1,14 @@
 class NPC extends MovingObject
 {
-   constructor(type, respawnTime)
+   constructor(respawnTime)
    {
-      super(type);
-
+      super();
       this.spawnIdx = -1;
       this.respawnTime = respawnTime;
-      this.active = false;
-      this.scale.s = 0.4;
+      this.enabled = false;
+      this.scale = 0.4;
       this.timer = -1;
+      this.isNPC = true;
    }
 
    placeInHex(idx)
@@ -24,7 +24,7 @@ class NPC extends MovingObject
 
    reactTo(player)
    {
-      this.active = true;
+      this.enabled = true;
    }
 }
 
@@ -32,14 +32,15 @@ class Item extends NPC
 {
    constructor(type, respawnTime)
    {
-      super(type, respawnTime);
+      super(respawnTime);
+      this.type = type;
    }
    
    reactTo(player)
    {
-      if (this.active)
+      if (this.enabled)
       {
-         this.active = false;
+         this.enabled = false;
          this.timer = this.respawnTime;
       }
       else if (this.timer < 0)
@@ -56,7 +57,7 @@ class Item extends NPC
          this.timer -= dt * 0.001;
          if (this.timer < 0)
          {
-            this.active = true;
+            this.enabled = true;
          }
       }
    }
@@ -67,7 +68,7 @@ class Teeth extends NPC
    constructor(type, respawnTime)
    {
       super(type, respawnTime);
-      this.scale.s = 10.0;
+      this.scale = 10.0;
       this.speed = 0.0005;
       this.targetDist = 0;
       this.startpos = {x:0,y:0};
@@ -80,8 +81,8 @@ class Teeth extends NPC
       this.startpos = startpos;
       this.pos.x = startpos.x;
       this.pos.y = startpos.y;
-      this.rotate.r = startrot;
-      this.active = true;
+      this.rotate = startrot;
+      this.enabled = true;
       this.startpos = startpos;
    }
 
@@ -89,7 +90,7 @@ class Teeth extends NPC
    {
       super.update(dt);
 
-      if (this.active)
+      if (this.enabled)
       {
         // console.log(this.translate.x+" "+this.translate.y+" "+this.dir.y+" "+this.pos.y);
          if ((this.startpos.y < 0 && this.pos.y > -10) ||
@@ -108,14 +109,14 @@ class Spawn extends NPC
    {
       super(type, respawnTime);
       this.speed = 0.001;
-      this.scale.s = 0.35;      
+      this.scale = 0.35;      
    }
 
    reactTo(player)
    {
-      if (this.active)
+      if (this.enabled)
       {
-         //this.active = false;
+         //this.enabled = false;
          //this.timer = this.respawnTime;
       }
       else if (this.timer < 0)
@@ -134,7 +135,7 @@ class Spawn extends NPC
    {
       super.update(dt);
       this.timer -= dt * 0.001;
-      if (!this.isMoving() && this.active && this.timer < 0)
+      if (!this.isMoving() && this.enabled && this.timer < 0)
       {         
          var nextHex = Math.floor(Math.random() *  hexBoard.numHex);
          var path = hexBoard.computePath(this.currentHex, nextHex);

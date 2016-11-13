@@ -11,13 +11,15 @@ class Bullet extends MovingObject
 {
    constructor() 
    {
-      super(CAVE.BULLET);
-      this.active = false;
+      super();
+      this.type = CAVE.BULLET;
+      this.enabled = false;
+      this.scale = 0.05;
    }
 
    update(dt)
    {
-      if (this.active)
+      if (this.enabled)
       {
          console.log("update bullet");
       }
@@ -27,7 +29,7 @@ class Bullet extends MovingObject
    _reachedTarget(idx)
    {
       var npc = lookupNPC(idx);
-      if (npc && npc.active)
+      if (npc && npc.enabled)
       {
          if (npc.type === CAVE.BEAST)
          {
@@ -43,7 +45,7 @@ class Bullet extends MovingObject
             npc.kill();
          }
       }
-      this.active = false;
+      this.enabled = false;
    }
 }
 
@@ -51,7 +53,8 @@ class Player extends MovingObject
 {
    constructor() 
    {
-      super(CAVE.PLAYER);
+      super();
+      this.type = CAVE.PLAYER;
       this.health = 0;
       this.mode = PLAYER_MODE.NORMAL;
       this.bullet = new Bullet();
@@ -62,13 +65,13 @@ class Player extends MovingObject
       this.health = gameState.health;
       this.mode = PLAYER_MODE.NORMAL;
       this.speed = 0.01;
-      this.bullet.actve = false;
+      this.bullet.enabled = false;
    }
 
    placeInHex(hexIdx)
    {
       super.placeInHex(hexIdx);
-      this.scale.s = hexBoard.b * 0.25;
+      this.scale = hexBoard.b * 0.25;
       this.translate.z = -4.0;
    }
 
@@ -83,7 +86,7 @@ class Player extends MovingObject
          super.update(dt);
          if (Math.abs(this.dir.y) > 0.0 || Math.abs(this.dir.x) > 0.0)
          {
-            this.rotate.r = Math.atan2(-this.dir.x, this.dir.y);
+            this.rotate = Math.atan2(-this.dir.x, this.dir.y);
          }      
       }
    }
@@ -94,12 +97,12 @@ class Player extends MovingObject
       var type = hexBoard.getHexType(idx);
       if (type === CAVE.BEAST)
       {
-         kill();
+         this.kill();
       }      
       else // ASN TODO: Do real intersection test
       {
          var npc = lookupNPC(idx);
-         if (npc && npc.active)
+         if (npc && npc.enabled)
          {
             if (npc.type == CAVE.SPAWN)
             {
@@ -150,7 +153,7 @@ class Player extends MovingObject
       if (hexBoard.isNeighbor(this.currentHex, hexIdx))
       {
          var path = hexBoard.computePath(this.currentHex, hexIdx);
-         this.bullet.active = true;
+         this.bullet.enabled = true;
          this.bullet.placeInHex(this.currentHex);
          this.bullet.followPath(path);
       }
@@ -180,7 +183,7 @@ class Player extends MovingObject
 
       if (mini !== -1) 
       {
-         this.rotate.r = Math.atan2(-NEIGHBORS[mini].dir.x, NEIGHBORS[mini].dir.y);
+         this.rotate = Math.atan2(-NEIGHBORS[mini].dir.x, NEIGHBORS[mini].dir.y);
          this.dir = {x:ndirx,y:ndiry};
       }
    }

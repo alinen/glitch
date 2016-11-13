@@ -35,7 +35,7 @@ var lastTime = 0;
 var player = new Player();
 var hexBoard = new HexBoard(2.0, worldSize, 0.2);
 var gameState = null;
-var npcs = [];
+var gos = []; // game objects
 var left = -worldSize;
 var right = worldSize;
 var bottom = -worldSize;
@@ -569,22 +569,23 @@ function initBuffers()
 
 function initObjects(gameState)
 {      
-    objects = [];
+    objects = []; // links graphics objects to game objects
+    gos = [];
 
-    // -- background objects
+    // -- background game objects
     objects.push(
-    {    
-       geometry: GEOMETRY.HEX,
-       translate : hexBoard.gridPos,
-       rotate : null,
-       scale : null,
-       shader : shaderNoise,
-       texture: backgroundTex,
-       enabled: true
+    {
+        geometry: GEOMETRY.HEX,
+        goId : gos.length,
+        shader : shaderNoise,
+        texture: backgroundTex
     });
+    var background = new GameObject();
+    background.translate = hexBoard.gridPos;
+    gos.push(background);
 
-    //--- game objects
-    var idx = hexBoard.findEmpty(); // todo: allow blood and other things in same cell?
+    //--- NPC game objects and item pickups
+    var idx = hexBoard.findEmpty(); // don't allow blood and other things in same cell
     hexBoard.setHexType(idx, CAVE.BEAST);   
     var bloodcells = hexBoard.getNeighbors(idx);
     for (var i = 0; i < bloodcells.length; i++)
@@ -595,15 +596,12 @@ function initObjects(gameState)
         objects.push(
         {
            geometry: GEOMETRY.BLOOD,
-           translate : npc.translate,
-           rotate : npc.rotate,
-           scale : npc.scale,
+           goId : gos.length,
            shader : shaderTex,
-           texture: backgroundTex,
-           enabled: false
+           texture: backgroundTex
         });
 
-        npcs.push(npc); 
+        gos.push(npc); 
     }
 
     gameState.items.forEach(function(item)
@@ -618,44 +616,36 @@ function initObjects(gameState)
           objects.push(
           {
              geometry: item.geom,
-             translate : npc.translate,
-             rotate : npc.rotate,
-             scale : npc.scale,
+             goId : gos.length,
              shader : shaderTex,
-             texture: backgroundTex,
-             enabled: false
+             texture: backgroundTex
           });
 
-          npcs.push(npc); 
+          gos.push(npc); 
        }
     });
 
 
     // monster teeth
     upperTeeth = new Teeth(CAVE.TEETH, 0);
+    objects.push(
+    {    
+       geometry: GEOMETRY.QUAD,
+       goId: gos.length,
+       shader : shaderTex,
+       texture: teethTex
+    });    
+    gos.push(upperTeeth); 
+
     lowerTeeth = new Teeth(CAVE.TEETH, 0);
     objects.push(
     {    
        geometry: GEOMETRY.QUAD,
-       translate : upperTeeth.translate,
-       rotate : upperTeeth.rotate,
-       scale : upperTeeth.scale,
+       goId: gos.length,
        shader : shaderTex,
-       texture: teethTex,
-       enabled: false
+       texture: teethTex
     });    
-    objects.push(
-    {    
-       geometry: GEOMETRY.QUAD,
-       translate : lowerTeeth.translate,
-       rotate : lowerTeeth.rotate,
-       scale : lowerTeeth.scale,
-       shader : shaderTex,
-       texture: teethTex,
-       enabled: false
-    });    
-    npcs.push(upperTeeth); 
-    npcs.push(lowerTeeth);     
+    gos.push(lowerTeeth);     
 
     //-- player object
     var idx = hexBoard.findEmpty();
@@ -664,26 +654,21 @@ function initObjects(gameState)
     objects.push(
     {
        geometry: GEOMETRY.TRI,
-       translate : player.translate,
-       rotate : player.rotate,
-       scale : player.scale,
+       goId: gos.length,
        shader : shaderSolid,
-       texture: backgroundTex,
-       enabled: true
+       texture: backgroundTex
     });
+    gos.push(player);
 
     objects.push(
     {
        geometry: GEOMETRY.ORB,
-       translate : player.bullet.translate,
-       rotate: player.bullet.rotate,
-       scale: player.bullet.scale,
+       goId: gos.length,
        shader: shaderSolid,
-       texture: backgroundTex,
-       enabled: false
+       texture: backgroundTex
     });
+    gos.push(player.bullet);
 }
-
 
 function drawScene() 
 {
@@ -693,15 +678,50 @@ function drawScene()
     mat4.ortho(left, right, bottom, up, 0.1, 100, pMatrix);
     mat4.identity(mvMatrix);
 
+    /*
+       mvPushMatrix();
+      
+       mat4.translate(mvMatrix, [0,0,-8]); //[go.translate.x, go.translate.y, go.translate.z]);
+       //mat4.rotate(mvMatrix, go.rotate, [0, 0, 1]);
+       //mat4.scale(mvMatrix, [go.scale, go.scale, go.scale]);
+ 
+       var g = geometry[GEOMETRY.HEX];
+ 
+       gl.useProgram(shaderNoise);
+       gl.bindBuffer(gl.ARRAY_BUFFER, g.vertexBuffer);
+       if (g.vertexDynamic) gl.bufferData(gl.ARRAY_BUFFER, g.vertexDynamic, gl.DYNAMIC_DRAW);
+       gl.vertexAttribPointer(shaderNoise.vertexPositionAttribute, g.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+  
+       gl.bindBuffer(gl.ARRAY_BUFFER, g.textureBuffer);
+       if (g.textureDynamic) gl.bufferData(gl.ARRAY_BUFFER, g.textureDynamic, gl.DYNAMIC_DRAW);
+       gl.vertexAttribPointer(shaderNoise.textureCoordAttribute, g.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+ 
+       gl.bindBuffer(gl.ARRAY_BUFFER, g.colorBuffer);
+       if (g.colorDynamic) gl.bufferData(gl.ARRAY_BUFFER, g.colorDynamic, gl.DYNAMIC_DRAW);
+       gl.vertexAttribPointer(shaderNoise.colorAttribute, g.colorBuffer.itemSize, gl.FLOAT, false, 0, 0);    
+ 
+       gl.activeTexture(gl.TEXTURE0);
+       gl.bindTexture(gl.TEXTURE_2D, backgroundTex);
+       gl.uniform1i(shaderNoise.samplerUniform, 0);
+ 
+       gl.uniformMatrix4fv(shaderNoise.pMatrixUniform, false, pMatrix);
+       gl.uniformMatrix4fv(shaderNoise.mvMatrixUniform, false, mvMatrix);
+       gl.uniform1f(shaderNoise.time, time);
+     
+       gl.drawArrays(g.primitive, 0, g.vertexBuffer.numItems);
+       mvPopMatrix();
+       */
+
     objects.forEach(function(obj) 
     {
-       if (obj.enabled)
+       var go = gos[obj.goId]; // game object
+       if (go.enabled)
        {
           mvPushMatrix();
          
-          if (obj.translate) mat4.translate(mvMatrix, [obj.translate.x, obj.translate.y, obj.translate.z]);
-          if (obj.rotate) mat4.rotate(mvMatrix, obj.rotate.r, [0, 0, 1]);
-          if (obj.scale) mat4.scale(mvMatrix, [obj.scale.s, obj.scale.s, obj.scale.s]);
+          mat4.translate(mvMatrix, [go.translate.x, go.translate.y, go.translate.z]);
+          mat4.rotate(mvMatrix, go.rotate, [0, 0, 1]);
+          mat4.scale(mvMatrix, [go.scale, go.scale, go.scale]);
     
           var g = geometry[obj.geometry];
     
@@ -735,10 +755,9 @@ function drawScene()
 function endGame()
 {
    gameOver = true;
-   player.active = false;
-   for (var i = 0; i < npcs.length; i++)
+   for (var i = 1; i < gos.length; i++)
    {
-      npcs[i].active = false;
+      gos[i].enabled = false;
    }   
    upperTeeth.start({x:0.0,y:20.0}, Math.PI, {x:0.0,y:-10.0});
    lowerTeeth.start({x:0.0,y:-20.0}, Math.PI*2, {x:0.0,y:10.0});   
@@ -751,10 +770,9 @@ function animate()
    {
       var dt = timeNow - lastTime;
       time += dt * 0.00005;
-      player.update(dt);
-      for (var i = 0; i < npcs.length; i++)
+      for (var i = 0; i < gos.length; i++)
       {
-         npcs[i].update(dt);
+         gos[i].update(dt);
       }
    }
    lastTime = timeNow;
@@ -762,19 +780,14 @@ function animate()
 
 function updateGame()
 {
-   //if (player.isDead && !gameOver) endGame();
-   
-   for (var i = 0; i < npcs.length; i++)
-   {
-      objects[i+1].enabled = npcs[i].active;
-   }
+   if (player.isDead() && !gameOver) endGame();
 }
 
 function lookupNPC(idx)
 {
-   for (var i = 0; i < npcs.length; i++)
+   for (var i = 0; i < gos.length; i++)
    {
-      if (npcs[i].currentHex === idx) return npcs[i];
+      if (gos[i].isNPC && gos[i].currentHex === idx) return gos[i];
    }
    return null;
 }
