@@ -42,7 +42,6 @@ class Bullet extends MovingObject
       {
          // we win! 
          player.mode = PLAYER_MODE.VICTOR;
-         console.log("HIT THE WAMPUS!");
       }
       else if (type === CAVE.BLOOD)
       {
@@ -57,6 +56,7 @@ class Bullet extends MovingObject
             npc.reactTo(player);
          }
       }
+      this.enabled = false;
    }
 }
 

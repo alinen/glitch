@@ -557,9 +557,9 @@ function initBuffers()
     texs = [];
     for (var i = 0; i < vertices.length; i+=3)
     {
-       colors.push(0.0);
-       colors.push(0.0);
-       colors.push(0.0);
+       colors.push(1.0);
+       colors.push(1.0);
+       colors.push(1.0);
        colors.push(1.0);
 
        texs.push(0.0);
