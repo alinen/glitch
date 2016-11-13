@@ -678,40 +678,6 @@ function drawScene()
     mat4.ortho(left, right, bottom, up, 0.1, 100, pMatrix);
     mat4.identity(mvMatrix);
 
-    /*
-       mvPushMatrix();
-      
-       mat4.translate(mvMatrix, [0,0,-8]); //[go.translate.x, go.translate.y, go.translate.z]);
-       //mat4.rotate(mvMatrix, go.rotate, [0, 0, 1]);
-       //mat4.scale(mvMatrix, [go.scale, go.scale, go.scale]);
- 
-       var g = geometry[GEOMETRY.HEX];
- 
-       gl.useProgram(shaderNoise);
-       gl.bindBuffer(gl.ARRAY_BUFFER, g.vertexBuffer);
-       if (g.vertexDynamic) gl.bufferData(gl.ARRAY_BUFFER, g.vertexDynamic, gl.DYNAMIC_DRAW);
-       gl.vertexAttribPointer(shaderNoise.vertexPositionAttribute, g.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
-  
-       gl.bindBuffer(gl.ARRAY_BUFFER, g.textureBuffer);
-       if (g.textureDynamic) gl.bufferData(gl.ARRAY_BUFFER, g.textureDynamic, gl.DYNAMIC_DRAW);
-       gl.vertexAttribPointer(shaderNoise.textureCoordAttribute, g.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
- 
-       gl.bindBuffer(gl.ARRAY_BUFFER, g.colorBuffer);
-       if (g.colorDynamic) gl.bufferData(gl.ARRAY_BUFFER, g.colorDynamic, gl.DYNAMIC_DRAW);
-       gl.vertexAttribPointer(shaderNoise.colorAttribute, g.colorBuffer.itemSize, gl.FLOAT, false, 0, 0);    
- 
-       gl.activeTexture(gl.TEXTURE0);
-       gl.bindTexture(gl.TEXTURE_2D, backgroundTex);
-       gl.uniform1i(shaderNoise.samplerUniform, 0);
- 
-       gl.uniformMatrix4fv(shaderNoise.pMatrixUniform, false, pMatrix);
-       gl.uniformMatrix4fv(shaderNoise.mvMatrixUniform, false, mvMatrix);
-       gl.uniform1f(shaderNoise.time, time);
-     
-       gl.drawArrays(g.primitive, 0, g.vertexBuffer.numItems);
-       mvPopMatrix();
-       */
-
     objects.forEach(function(obj) 
     {
        var go = gos[obj.goId]; // game object
