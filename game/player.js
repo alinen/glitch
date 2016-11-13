@@ -56,7 +56,6 @@ class Bullet extends MovingObject
             npc.reactTo(player);
          }
       }
-      this.enabled = false;
    }
 }
 
@@ -110,7 +109,7 @@ class Player extends MovingObject
       {
          this.kill(DEAD.BEAST);
       }      
-      else // ASN TODO: Do real intersection test
+      else if (idx !== this.path[0]) // ASN TODO: Do real intersection test
       {
          var npc = lookupNPC(idx);
          if (npc && npc.enabled)
@@ -122,7 +121,7 @@ class Player extends MovingObject
             }
             else if (npc.type == CAVE.HEART)
             {
-               this.health = gameState.health; // reset health
+               this.health = this.health + 1; // increase health
             }
          }
          if (npc) npc.reactTo(this);         

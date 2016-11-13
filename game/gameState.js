@@ -35,7 +35,7 @@ class GameState
          geom: GEOMETRY.STAR
       },
       {
-         num: 0,
+         num: 1,
          respawnTime: 10,
          type: CAVE.HEART,
          geom: GEOMETRY.HEART
