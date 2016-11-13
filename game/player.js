@@ -162,7 +162,6 @@ class Player extends MovingObject
 
       if (hexBoard.isNeighbor(this.currentHex, hexIdx))
       {
-         console.log("fire!! "+ this.currentHex+" "+hexIdx);
          var path = hexBoard.computePath(this.currentHex, hexIdx);
          this.bullet.enabled = true;
          this.bullet.placeInHex(this.currentHex);
@@ -202,8 +201,11 @@ class Player extends MovingObject
    enableFireMode(on)
    {
       if (on) this.mode = PLAYER_MODE.FIRE;
-      else this.mode = PLAYER_MODE.NORMAL;
-      console.log("MODE: "+this.mode);
+      else
+      {
+         this.mode = PLAYER_MODE.NORMAL;
+         this.bullet.enabled = false;
+      }
    }
 
    getFireMode()

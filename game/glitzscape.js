@@ -741,6 +741,7 @@ function resetGame()
 
 function nextCave()
 {
+    initTexture();
     hexBoard.resetBoard();
     hexBoard.computeMaze();
     initObjects(gameState);
