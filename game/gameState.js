@@ -29,7 +29,7 @@ class GameState
          geom: GEOMETRY.SPAWN
       },
       {
-         num: 0,
+         num: 2,
          respawnTime: 10,
          type: CAVE.STAR,
          geom: GEOMETRY.STAR

@@ -43,11 +43,12 @@ var up = worldSize;
 var time = 0;
 var paused = true;
 var gameOver = false;
-var titleScreen = null;
-var gameOverScreen = null;
 var lowerTeeth = null;
 var upperTeeth = null;
 var highlightIdx = -1;
+var numCaves = 0;
+var maxCaves = 3; // Set number of caves to escape to win game
+var currentMsg = null;
 
 function initGL(canvas) 
 {
@@ -247,7 +248,11 @@ function handleMouseDown(event)
 {
    if (paused)
    {
-      $("#title").fadeOut();
+      if (currentMsg)
+      {
+         $("#"+currentMsg).fadeOut();
+         currentMsg = null;
+      }
       paused = false;
    }
    else
@@ -496,19 +501,19 @@ function initBuffers()
        vertices.push(y2);
        vertices.push(0.0);
 
-       colors.push(0.0);
-       colors.push(0.0);
-       colors.push(0.0);
+       colors.push(1.0);
+       colors.push(1.0);
+       colors.push(1.0);
        colors.push(1.0);
 
-       colors.push(0.0);
-       colors.push(0.0);
-       colors.push(0.0);
+       colors.push(1.0);
+       colors.push(1.0);
+       colors.push(1.0);
        colors.push(1.0);
 
-       colors.push(0.0);
-       colors.push(0.0);
-       colors.push(0.0);
+       colors.push(1.0);
+       colors.push(1.0);
+       colors.push(1.0);
        colors.push(1.0);
        
        texs.push(0.0);
@@ -662,7 +667,7 @@ function initObjects(gameState)
 
     objects.push(
     {
-       geometry: GEOMETRY.ORB,
+       geometry: GEOMETRY.STAR,
        goId: gos.length,
        shader: shaderSolid,
        texture: backgroundTex
@@ -718,7 +723,7 @@ function drawScene()
     });
 }
 
-function endGame()
+function loseGame()
 {
    gameOver = true;
    for (var i = 1; i < gos.length; i++)
@@ -727,6 +732,21 @@ function endGame()
    }   
    upperTeeth.start({x:0.0,y:20.0}, Math.PI, {x:0.0,y:-10.0});
    lowerTeeth.start({x:0.0,y:-20.0}, Math.PI*2, {x:0.0,y:10.0});   
+
+   showMessage('eatenCavern', false);
+}
+
+function winGame()
+{
+   gameOver = true;
+   showMessage('escape', true);
+}
+
+function nextCave()
+{
+   showMessage('beastSlain', true);
+   numCaves = numCaves+1;
+   console.log("RESET MAZE TODO!!! "+numCaves);
 }
 
 function animate() 
@@ -746,7 +766,15 @@ function animate()
 
 function updateGame()
 {
-   if (player.isDead() && !gameOver) endGame();
+   if (!gameOver)
+   {
+      if (player.isDead()) loseGame();
+      else if (player.isVictor())
+      {
+         if (numCaves < maxCaves) nextCave();
+         else winGame();
+      }
+   }
 }
 
 function lookupNPC(idx)
@@ -765,6 +793,8 @@ function updateHUD()
       if (i < player.health) $("#HB"+i).css('background','red');
       else $("#HB"+i).css('background','black');
    }
+
+   // TODO: Update ammo count
 }
 
 function tick() 
@@ -774,6 +804,29 @@ function tick()
     animate();
     updateGame();
     updateHUD();
+}
+
+function showMessage(name, pauseGame)
+{
+   currentMsg = name;
+
+   var canvas = document.getElementById("game-canvas");
+   var canvasRect = canvas.getBoundingClientRect();
+   msgScreen = document.getElementById(name);
+
+   image = document.getElementById(name+"Img");
+   console.log("IMAGE: "+image.src+" "+image.naturalWidth+" "+image.naturalHeight+" "+name);
+
+   msgScreen.style.left = (canvasRect.left+canvas.width*0.5-image.naturalWidth*0.5)+'px';
+   msgScreen.style.top = '100px';
+   msgScreen.style.opacity = 1.0;
+   msgScreen.style.display = "inline";
+
+   paused = pauseGame;
+   if (!pauseGame) // start fade out immediately
+   {
+      $('#'+name).fadeOut(1000);
+   }
 }
 
 function webGLStart() 
@@ -796,11 +849,7 @@ function webGLStart()
     document.onmousemove = handleMouseMove;
     document.onmousedown = handleMouseDown;
 
-    var canvasRect = canvas.getBoundingClientRect();
-    titleScreen = document.getElementById("title");
-    titleScreen.style.left = (canvasRect.left+canvas.width*0.5-407*0.5)+'px';
-    titleScreen.style.top = '100px';
-
+    showMessage('title', true);
     tick();
 }
 

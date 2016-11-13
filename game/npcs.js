@@ -26,6 +26,11 @@ class NPC extends MovingObject
    {
       this.enabled = true;
    }
+
+   kill() // no more respawns, not for a long long time
+   {
+      this.respawnTime = 999999999.0;
+   }
 }
 
 class Item extends NPC
@@ -116,8 +121,8 @@ class Spawn extends NPC
    {
       if (this.enabled)
       {
-         //this.enabled = false;
-         //this.timer = this.respawnTime;
+         this.enabled = false;
+         this.timer = this.respawnTime;
       }
       else if (this.timer < 0)
       {
@@ -134,12 +139,15 @@ class Spawn extends NPC
    update(dt)
    {
       super.update(dt);
-      this.timer -= dt * 0.001;
-      if (!this.isMoving() && this.enabled && this.timer < 0)
-      {         
-         var nextHex = Math.floor(Math.random() *  hexBoard.numHex);
-         var path = hexBoard.computePath(this.currentHex, nextHex);
-         this.followPath(path);
+      if (this.enabled)
+      {
+         this.timer -= dt * 0.001;
+         if (!this.isMoving() && this.timer < 0)
+         {         
+            var nextHex = Math.floor(Math.random() *  hexBoard.numHex);
+            var path = hexBoard.computePath(this.currentHex, nextHex);
+            this.followPath(path);
+         }
       }
    }
 };

@@ -14,15 +14,13 @@ class Bullet extends MovingObject
       super();
       this.type = CAVE.BULLET;
       this.enabled = false;
-      this.scale = 0.05;
+      this.scale = 0.2;
+      this.speed = 0.02;
+      this.timer = -1;
    }
 
    update(dt)
    {
-      if (this.enabled)
-      {
-         console.log("update bullet");
-      }
       super.update(dt);
    }
 
@@ -42,10 +40,9 @@ class Bullet extends MovingObject
          }
          else if (npc.type === CAVE.SPAWN)
          {
-            npc.kill();
+            npc.reactTo(player);
          }
       }
-      this.enabled = false;
    }
 }
 
@@ -77,10 +74,6 @@ class Player extends MovingObject
 
    update(dt)
    {
-      // ASN TODO: in god mode right now
-      //if (this.mode == PLAYER_MODE.DEAD) return; // can't move
-      //if (this.mode == PLAYER_MODE.FIRE) return;
-
       if (this.mode == PLAYER_MODE.NORMAL)
       {
          super.update(dt);
@@ -152,6 +145,7 @@ class Player extends MovingObject
 
       if (hexBoard.isNeighbor(this.currentHex, hexIdx))
       {
+         console.log("fire!! "+ hexIdx);
          var path = hexBoard.computePath(this.currentHex, hexIdx);
          this.bullet.enabled = true;
          this.bullet.placeInHex(this.currentHex);
@@ -198,6 +192,11 @@ class Player extends MovingObject
    getFireMode()
    {
       return this.mode === PLAYER_MODE.FIRE;
+   }
+
+   isVictor()
+   {
+      return this.mode === PLAYER_MODE.VICTOR;
    }
 
    isDead() 
