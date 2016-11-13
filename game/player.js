@@ -34,20 +34,26 @@ class Bullet extends MovingObject
 
    _reachedTarget(idx)
    {
-      var npc = lookupNPC(idx);
-      if (npc && npc.enabled)
+      var targetIdx = this.path[this.path.length-1];
+      if (idx !== targetIdx) return;
+
+      var type = hexBoard.getHexType(idx);
+      if (type === CAVE.BEAST)
       {
-         if (npc.type === CAVE.BEAST)
+         // we win! 
+         player.mode = PLAYER_MODE.VICTOR;
+         console.log("HIT THE WAMPUS!");
+      }
+      else if (type === CAVE.BLOOD)
+      {
+         player.kill(DEAD.NOISE);
+      }
+      else 
+      {   
+         var npc = lookupNPC(idx);
+         if (npc && npc.enabled && npc.type === CAVE.SPAWN)
          {
-            // we win! 
-            player.mode = PLAYER_MODE.VICTOR;
-         }
-         else if (hexBoard.getHexType(idx) === CAVE.BLOOD)
-         {
-            player.kill(DEAD.NOISE);
-         }
-         else if (npc.type === CAVE.SPAWN)
-         {
+            npc.kill();
             npc.reactTo(player);
          }
       }
@@ -156,7 +162,7 @@ class Player extends MovingObject
 
       if (hexBoard.isNeighbor(this.currentHex, hexIdx))
       {
-         console.log("fire!! "+ hexIdx);
+         console.log("fire!! "+ this.currentHex+" "+hexIdx);
          var path = hexBoard.computePath(this.currentHex, hexIdx);
          this.bullet.enabled = true;
          this.bullet.placeInHex(this.currentHex);

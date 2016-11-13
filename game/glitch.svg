@@ -16,7 +16,10 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="glitch.svg">
+   sodipodi:docname="glitch.svg"
+   inkscape:export-filename="C:\cygwin64\home\alinen\webGL\glitch\game\eatenBullet.png"
+   inkscape:export-xdpi="89.992188"
+   inkscape:export-ydpi="89.992188">
   <defs
      id="defs4">
     <pattern
@@ -136,7 +139,7 @@
      inkscape:pageshadow="2"
      inkscape:zoom="0.6"
      inkscape:cx="848.99882"
-     inkscape:cy="722.05838"
+     inkscape:cy="588.72504"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -593,7 +596,7 @@
        d="m 876.66665,292.36221 -54.56018,-29.51406 -55.43982,26.18073 29.51405,-54.56019 -26.18072,-55.43982 54.56018,29.51406 55.43982,-26.18072 -29.51406,54.56018 z"
        inkscape:transform-center-x="1.8773857"
        inkscape:transform-center-y="-14.202251"
-       transform="matrix(0.7202839,0.69367939,-0.69367939,0.7202839,406.45672,-453.80975)"
+       transform="matrix(0.7202839,0.69367939,-0.69367939,0.7202839,-40.209947,149.52359)"
        inkscape:export-xdpi="89.992188"
        inkscape:export-ydpi="89.992188" />
     <flowRoot

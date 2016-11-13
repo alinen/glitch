@@ -71,7 +71,7 @@ class MovingObject extends GameObject
             this._reachedTarget(this.targetHex);
             this.pos = target;
             this.currentHex = this.targetHex;
-            hexBoard.setHexType(this.currentHex, this.type);
+            //hexBoard.setHexType(this.currentHex, this.type); // use proper intersection test
 
             this.pathIdx++;
             if (this.pathIdx < this.path.length)
