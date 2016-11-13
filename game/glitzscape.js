@@ -248,16 +248,22 @@ function handleMouseDown(event)
 {
    if (paused)
    {
-      if (currentMsg)
-      {
-         $("#"+currentMsg).fadeOut();
-         currentMsg = null;
-      }
       paused = false;
    }
    else
    {
       player.input({x:lastMouseX, y:lastMouseY});
+   }
+
+   if (currentMsg)
+   {
+      $("#"+currentMsg).fadeOut();
+      currentMsg = null;
+
+      if (gameOver)
+      {
+         resetGame();
+      }
    }
 }
 
@@ -574,7 +580,7 @@ function initBuffers()
 
 function initObjects(gameState)
 {      
-    objects = []; // links graphics objects to game objects
+    objects = []; // links graphics objects to game object
     gos = [];
 
     // -- background game objects
@@ -723,6 +729,36 @@ function drawScene()
     });
 }
 
+
+function resetGame()
+{
+    paused = true;
+    showMessage('title');
+    nextCave();
+    numCaves = 0;
+    gameOver = false;
+}
+
+function nextCave()
+{
+    hexBoard.resetBoard();
+    hexBoard.computeMaze();
+    initObjects(gameState);
+    numCaves = numCaves + 1;
+}
+
+function badBullet()
+{
+   showMessage('eatenBullet');
+   loseGame();
+}
+
+function enterBeastCavern()
+{
+   showMessage('eatenCavern');
+   loseGame();
+}
+
 function loseGame()
 {
    gameOver = true;
@@ -732,21 +768,13 @@ function loseGame()
    }   
    upperTeeth.start({x:0.0,y:20.0}, Math.PI, {x:0.0,y:-10.0});
    lowerTeeth.start({x:0.0,y:-20.0}, Math.PI*2, {x:0.0,y:10.0});   
-
-   showMessage('eatenCavern', false);
 }
 
 function winGame()
 {
    gameOver = true;
-   showMessage('escape', true);
-}
-
-function nextCave()
-{
-   showMessage('beastSlain', true);
-   numCaves = numCaves+1;
-   console.log("RESET MAZE TODO!!! "+numCaves);
+   showMessage('escape');
+   paused = true;
 }
 
 function animate() 
@@ -768,10 +796,29 @@ function updateGame()
 {
    if (!gameOver)
    {
-      if (player.isDead()) loseGame();
+      if (player.isDead())
+      {
+         if (player.getDeathCause() === DEAD.NOISE)
+         {
+            badBullet();
+         }
+         else if (player.getDeathCause() === DEAD.BEAST)
+         {
+            enterBeastCavern();
+         }
+         else if (player.getDeathCause() === DEAD.SPAWN) // todo
+         {
+            // todo: make message for this
+            loseGame();
+         }
+      }
       else if (player.isVictor())
       {
-         if (numCaves < maxCaves) nextCave();
+         if (numCaves < maxCaves) 
+         {
+            nextCave();
+            showMessage('slain');
+         }
          else winGame();
       }
    }
@@ -806,27 +853,19 @@ function tick()
     updateHUD();
 }
 
-function showMessage(name, pauseGame)
+function showMessage(name)
 {
    currentMsg = name;
 
    var canvas = document.getElementById("game-canvas");
    var canvasRect = canvas.getBoundingClientRect();
-   msgScreen = document.getElementById(name);
+   var image = document.getElementById(name+"Img");
 
-   image = document.getElementById(name+"Img");
-   console.log("IMAGE: "+image.src+" "+image.naturalWidth+" "+image.naturalHeight+" "+name);
-
+   var msgScreen = document.getElementById(name);
    msgScreen.style.left = (canvasRect.left+canvas.width*0.5-image.naturalWidth*0.5)+'px';
    msgScreen.style.top = '100px';
    msgScreen.style.opacity = 1.0;
    msgScreen.style.display = "inline";
-
-   paused = pauseGame;
-   if (!pauseGame) // start fade out immediately
-   {
-      $('#'+name).fadeOut(1000);
-   }
 }
 
 function webGLStart() 
@@ -849,7 +888,7 @@ function webGLStart()
     document.onmousemove = handleMouseMove;
     document.onmousedown = handleMouseDown;
 
-    showMessage('title', true);
+    showMessage('title');
     tick();
 }
 

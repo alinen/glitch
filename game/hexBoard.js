@@ -177,6 +177,17 @@ class HexBoard
       console.log("Init board: " + this.numRows + " " + this.numCols + " " + this.numHex + " "+ this.vertices.length/3);
    }   
 
+   resetBoard()
+   {
+      for (var i = 0; i < this.colors.length; i += 4)
+      {
+         this.colors[i+0] = 1.0;
+         this.colors[i+1] = 1.0;
+         this.colors[i+2] = 1.0;
+         this.colors[i+3] = 0.0;
+      }
+   }
+
    computeMaze()
    {
       this.maze = []; // ASN: What is the javascript way to init an array of type A and size N?

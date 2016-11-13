@@ -7,6 +7,14 @@ var PLAYER_MODE =
    VICTOR: 4
 }
 
+var DEAD =
+{
+   NONE: 0,
+   NOISE: 1,
+   BEAST: 2,
+   SPAWN: 3
+}
+
 class Bullet extends MovingObject
 {
    constructor() 
@@ -36,7 +44,7 @@ class Bullet extends MovingObject
          }
          else if (hexBoard.getHexType(idx) === CAVE.BLOOD)
          {
-            player.kill();
+            player.kill(DEAD.NOISE);
          }
          else if (npc.type === CAVE.SPAWN)
          {
@@ -55,6 +63,7 @@ class Player extends MovingObject
       this.health = 0;
       this.mode = PLAYER_MODE.NORMAL;
       this.bullet = new Bullet();
+      this.death = DEAD.NONE;
    }
 
    init()
@@ -63,6 +72,8 @@ class Player extends MovingObject
       this.mode = PLAYER_MODE.NORMAL;
       this.speed = 0.01;
       this.bullet.enabled = false;
+      this.death = DEAD.NONE;
+      this.enabled = true;
    }
 
    placeInHex(hexIdx)
@@ -70,6 +81,7 @@ class Player extends MovingObject
       super.placeInHex(hexIdx);
       this.scale = hexBoard.b * 0.25;
       this.translate.z = -4.0;
+      console.log("Place player in hex");
    }
 
    update(dt)
@@ -90,7 +102,7 @@ class Player extends MovingObject
       var type = hexBoard.getHexType(idx);
       if (type === CAVE.BEAST)
       {
-         this.kill();
+         this.kill(DEAD.BEAST);
       }      
       else // ASN TODO: Do real intersection test
       {
@@ -100,7 +112,7 @@ class Player extends MovingObject
             if (npc.type == CAVE.SPAWN)
             {
                this.health -= gameState.spawnDamage;
-               if (this.health === 0) this.mode = PLAYER_MODE.DEAD;
+               if (this.health === 0) this.kill(DEAD.SPAWN);
             }
             else if (npc.type == CAVE.HEART)
             {
@@ -109,7 +121,6 @@ class Player extends MovingObject
          }
          if (npc) npc.reactTo(this);         
       }
- 
    }
 
    move(worldPoint)
@@ -204,10 +215,16 @@ class Player extends MovingObject
       return this.mode === PLAYER_MODE.DEAD;
    }
 
-   kill()
+   getDeathCause()
+   {
+      return this.death;
+   }
+
+   kill(cause)
    {
       this.health = 0;
       this.mode = PLAYER_MODE.DEAD;
+      this.death = cause;
    }
 
    hover(worldPoint)
