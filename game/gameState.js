@@ -23,7 +23,7 @@ class GameState
       this.spawnDamage = 1;
       this.items = [
       {
-         num: 4,
+         num: 8,
          respawnTime: 5,
          type: CAVE.SPAWN,
          geom: GEOMETRY.SPAWN

@@ -48,7 +48,7 @@ class Item extends NPC
          this.enabled = false;
          this.timer = this.respawnTime;
       }
-      else if (this.timer < 0)
+      else if (this.timer < 0) // first contact
       {
          super.reactTo(player);
       }
@@ -108,28 +108,19 @@ class Teeth extends NPC
    }
 }
 
-class Spawn extends NPC
+class Spawn extends Item
 {
    constructor(type, respawnTime)
    {
-      super(type, respawnTime);
+      super(respawnTime);
+      this.type = type;
       this.speed = 0.001;
-      this.scale = 0.35;      
-      this.timer = 2;
    }
-
-   reactTo(player)
-   {
-      if (this.enabled)
-      {
-         this.enabled = false;
-         this.timer = this.respawnTime;
-      }
-   }   
 
    _reachedTarget(idx)
    {
       this.timer = 10; 
+      hexBoard.setHexType(idx,this.type);
    }   
 
    update(dt)

@@ -138,8 +138,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.6"
-     inkscape:cx="848.99882"
-     inkscape:cy="588.72504"
+     inkscape:cx="628.40347"
+     inkscape:cy="788.72504"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -548,7 +548,7 @@
            style="fill:url(#pattern4956);fill-opacity:1" /></flowRegion><flowPara
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:32.38944626px;line-height:125%;font-family:'Courier New';-inkscape-font-specification:'Courier New, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:url(#pattern4956);fill-opacity:1"
          id="flowPara4952">danger! the beast is near</flowPara></flowRoot>    <flowRoot
-       transform="translate(-6.25,39.84375)"
+       transform="translate(155.41667,74.84375)"
        inkscape:export-ydpi="89.992188"
        inkscape:export-xdpi="89.992188"
        style="font-style:normal;font-weight:normal;font-size:32.38944626px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:url(#pattern4956);fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -616,7 +616,7 @@
            style="fill:url(#pattern4956);fill-opacity:1" /></flowRegion><flowPara
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:32.38944626px;line-height:125%;font-family:'Courier New';-inkscape-font-specification:'Courier New, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:url(#pattern4956);fill-opacity:1"
          id="flowPara4982">you pick up a bullet</flowPara></flowRoot>    <flowRoot
-       transform="translate(237.08334,263.17708)"
+       transform="translate(208.75001,266.51041)"
        inkscape:export-ydpi="89.992188"
        inkscape:export-xdpi="89.992188"
        style="font-style:normal;font-weight:normal;font-size:32.38944626px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:url(#pattern4956);fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -655,7 +655,7 @@
        style="font-style:normal;font-weight:normal;font-size:32.38944626px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:url(#pattern4956);fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        inkscape:export-xdpi="89.992188"
        inkscape:export-ydpi="89.992188"
-       transform="translate(262.08334,548.17708)"><flowRegion
+       transform="translate(155.41667,546.51041)"><flowRegion
          id="flowRegion5004"
          style="fill:url(#pattern4956)"><rect
            id="rect5006"
@@ -667,5 +667,23 @@
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:32.38944626px;line-height:125%;font-family:'Courier New';-inkscape-font-specification:'Courier New, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:url(#pattern4956);fill-opacity:1"
          id="flowPara5008">you stumbled into the beast's lair</flowPara><flowPara
          id="flowPara5010"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:32.38944626px;line-height:125%;font-family:'Courier New';-inkscape-font-specification:'Courier New, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:url(#pattern4956);fill-opacity:1">   ...and it ate you</flowPara></flowRoot>  </g>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:32.38944626px;line-height:125%;font-family:'Courier New';-inkscape-font-specification:'Courier New, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:url(#pattern4956);fill-opacity:1">   ...and it ate you</flowPara></flowRoot>    <flowRoot
+       transform="translate(267.65625,-230.98959)"
+       inkscape:export-ydpi="89.992188"
+       inkscape:export-xdpi="89.992188"
+       style="font-style:normal;font-weight:normal;font-size:32.38944626px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:url(#pattern4956);fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="flowRoot4959"
+       xml:space="preserve"><flowRegion
+         style="fill:url(#pattern4956)"
+         id="flowRegion4961"><rect
+           style="fill:url(#pattern4956);fill-opacity:1"
+           y="60.004333"
+           x="412.88962"
+           height="84.139854"
+           width="661.49255"
+           id="rect4963" /></flowRegion><flowPara
+         id="flowPara4965"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:32.38944626px;line-height:125%;font-family:'Courier New';-inkscape-font-specification:'Courier New, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:url(#pattern4956);fill-opacity:1">the spawns stole your strength</flowPara><flowPara
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:32.38944626px;line-height:125%;font-family:'Courier New';-inkscape-font-specification:'Courier New, Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:url(#pattern4956);fill-opacity:1"
+         id="flowPara4967">    ...and you died</flowPara></flowRoot>  </g>
 </svg>

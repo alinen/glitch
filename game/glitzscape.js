@@ -254,6 +254,7 @@ function handleMouseDown(event)
       {
          player.enableFireMode(true);
          var wp = {x:lastMouseX, y:lastMouseY};
+         player.aim(wp);
          player.fire(wp);
       }
       else

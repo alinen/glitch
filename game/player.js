@@ -111,7 +111,7 @@ class Player extends MovingObject
       {
          this.kill(DEAD.BEAST);
       }      
-      else if (idx !== this.path[0]) // ASN TODO: Do real intersection test
+      else if (idx !== this.path[0]) 
       {
          var npc = lookupNPC(idx);
          if (npc && npc.enabled)
