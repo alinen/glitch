@@ -37,13 +37,15 @@ class Bullet extends MovingObject
       var targetIdx = this.path[this.path.length-1];
       if (idx !== targetIdx) return;
 
+      player.enableFireMode(false);
       var type = hexBoard.getHexType(idx);
+      var playerType = hexBoard.getHexType(player.currentHex);
       if (type === CAVE.BEAST)
       {
          // we win! 
          player.mode = PLAYER_MODE.VICTOR;
       }
-      else if (type === CAVE.BLOOD)
+      else if (type === CAVE.BLOOD || playerType === CAVE.BLOOD)
       {
          player.kill(DEAD.NOISE);
       }
@@ -57,7 +59,6 @@ class Bullet extends MovingObject
          }
       }
 
-      player.enableFireMode(false);
    }
 }
 

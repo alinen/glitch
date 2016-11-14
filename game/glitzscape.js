@@ -34,7 +34,7 @@ var lastMouseY = null;
 var worldSize = 10.0;
 var lastTime = 0;
 var player = new Player();
-var hexBoard = new HexBoard(2.0, worldSize, 0.2);
+var hexBoard = new HexBoard(1.5, worldSize, 0.2);
 var gameState = null;
 var gos = []; // game objects
 var left = -worldSize;
@@ -50,8 +50,6 @@ var highlightIdx = -1;
 var numCaves = 0;
 var maxCaves = 3; // Set number of caves to escape to win game
 var currentMsg = null;
-var lastClick = 0;
-var queueMove = false; // to support double click
 
 function initGL(canvas) 
 {
@@ -240,41 +238,27 @@ function handleMouseMove(event)
        highlightIdx = idx;
     }
 
-    // allow player icon to update also
-    player.aim({x:sceneX, y:sceneY});
-
     lastMouseX = sceneX;
     lastMouseY = sceneY;
 }
 
 function handleMouseDown(event)
 {
-   var dblClick = false;
-   var timeNow = new Date().getTime();
-   var diff = (timeNow - lastClick) * 0.00005;
-   console.log("mouse down "+diff);
-   if (diff < DOUBLE_CLICK_THRESH)
-   {
-      dblClick = true;
-   }
-   lastClick = timeNow;
-
    if (paused)
    {
       paused = false;
    }
    else
    {
-      if (dblClick)
+      if (event.ctrlKey)
       {
          player.enableFireMode(true);
          var wp = {x:lastMouseX, y:lastMouseY};
          player.fire(wp);
-         queueMove = false;
       }
       else
       {
-         queueMove = true;
+         player.move({x:lastMouseX, y:lastMouseY});
       }
    }
 
@@ -819,14 +803,6 @@ function animate()
          gos[i].update(dt);
       }
 
-      var clickDt = (timeNow - lastClick) * 0.00005;
-      if (queueMove && clickDt > DOUBLE_CLICK_THRESH + 0.001)
-      {
-         console.log("move "+clickDt);
-         player.move({x:lastMouseX, y:lastMouseY});
-         queueMove = false;
-         lastClick = timeNow;
-      }
    }
    lastTime = timeNow;
 }
@@ -837,6 +813,7 @@ function updateGame()
    {
       if (player.isDead())
       {
+         console.log("player is dead");
          if (player.getDeathCause() === DEAD.NOISE)
          {
             badBullet();

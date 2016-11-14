@@ -6,7 +6,7 @@ class NPC extends MovingObject
       this.spawnIdx = -1;
       this.respawnTime = respawnTime;
       this.enabled = false;
-      this.scale = 0.4;
+      this.scale = 0.25;
       this.timer = -1;
       this.isNPC = true;
    }
