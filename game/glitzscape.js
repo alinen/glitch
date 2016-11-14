@@ -1,5 +1,6 @@
 // constants
 const DEG2RAD = Math.PI / 180.0;
+const DOUBLE_CLICK_THRESH = 0.01;
 
 var GEOMETRY = 
 {
@@ -49,6 +50,8 @@ var highlightIdx = -1;
 var numCaves = 0;
 var maxCaves = 3; // Set number of caves to escape to win game
 var currentMsg = null;
+var lastClick = 0;
+var queueMove = false; // to support double click
 
 function initGL(canvas) 
 {
@@ -238,7 +241,7 @@ function handleMouseMove(event)
     }
 
     // allow player icon to update also
-    player.hover({x:sceneX, y:sceneY});
+    player.aim({x:sceneX, y:sceneY});
 
     lastMouseX = sceneX;
     lastMouseY = sceneY;
@@ -246,13 +249,33 @@ function handleMouseMove(event)
 
 function handleMouseDown(event)
 {
+   var dblClick = false;
+   var timeNow = new Date().getTime();
+   var diff = (timeNow - lastClick) * 0.00005;
+   console.log("mouse down "+diff);
+   if (diff < DOUBLE_CLICK_THRESH)
+   {
+      dblClick = true;
+   }
+   lastClick = timeNow;
+
    if (paused)
    {
       paused = false;
    }
    else
    {
-      player.input({x:lastMouseX, y:lastMouseY});
+      if (dblClick)
+      {
+         player.enableFireMode(true);
+         var wp = {x:lastMouseX, y:lastMouseY};
+         player.fire(wp);
+         queueMove = false;
+      }
+      else
+      {
+         queueMove = true;
+      }
    }
 
    if (currentMsg)
@@ -748,6 +771,12 @@ function nextCave()
     numCaves = numCaves + 1;
 }
 
+function spawnFatigue()
+{
+   showMessage('spawn');
+   loseGame();
+}
+
 function badBullet()
 {
    showMessage('eatenBullet');
@@ -789,6 +818,15 @@ function animate()
       {
          gos[i].update(dt);
       }
+
+      var clickDt = (timeNow - lastClick) * 0.00005;
+      if (queueMove && clickDt > DOUBLE_CLICK_THRESH + 0.001)
+      {
+         console.log("move "+clickDt);
+         player.move({x:lastMouseX, y:lastMouseY});
+         queueMove = false;
+         lastClick = timeNow;
+      }
    }
    lastTime = timeNow;
 }
@@ -809,8 +847,7 @@ function updateGame()
          }
          else if (player.getDeathCause() === DEAD.SPAWN) // todo
          {
-            // todo: make message for this
-            loseGame();
+            spawnFatigue();
          }
       }
       else if (player.isVictor())

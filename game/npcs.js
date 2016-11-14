@@ -115,6 +115,7 @@ class Spawn extends NPC
       super(type, respawnTime);
       this.speed = 0.001;
       this.scale = 0.35;      
+      this.timer = 2;
    }
 
    reactTo(player)
@@ -124,11 +125,6 @@ class Spawn extends NPC
          this.enabled = false;
          this.timer = this.respawnTime;
       }
-      else if (this.timer < 0)
-      {
-         super.reactTo(player);
-         this.timer = 2;
-      }      
    }   
 
    _reachedTarget(idx)

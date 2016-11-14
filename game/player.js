@@ -56,6 +56,8 @@ class Bullet extends MovingObject
             npc.reactTo(player);
          }
       }
+
+      player.enableFireMode(false);
    }
 }
 
@@ -86,7 +88,6 @@ class Player extends MovingObject
       super.placeInHex(hexIdx);
       this.scale = hexBoard.b * 0.25;
       this.translate.z = -4.0;
-      console.log("Place player in hex");
    }
 
    update(dt)
@@ -193,7 +194,6 @@ class Player extends MovingObject
       if (mini !== -1) 
       {
          this.rotate = Math.atan2(-NEIGHBORS[mini].dir.x, NEIGHBORS[mini].dir.y);
-         this.dir = {x:ndirx,y:ndiry};
       }
    }
 
@@ -234,32 +234,9 @@ class Player extends MovingObject
       this.death = cause;
    }
 
-   hover(worldPoint)
-   {
-      if (this.mode === PLAYER_MODE.FIRE)
-      {
-         this.aim(worldPoint);
-      }
-   }
-
    input(worldPoint)
    {
-      var hexIdx = hexBoard.pointToId(worldPoint);
-      if (hexIdx === this.currentHex) 
-      {
-         this.enableFireMode(!this.getFireMode()); // enable fire mode
-         if (!this.getFireMode()) this.clearDir();
-      }
-
-      if (this.mode === PLAYER_MODE.FIRE)
-      {
-         this.aim(worldPoint);
-         this.fire(worldPoint);
-      }
-      else
-      {
-         this.move(worldPoint);
-      }
+      this.move(worldPoint);
    }
 
    isMoving()
