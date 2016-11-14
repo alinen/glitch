@@ -168,6 +168,10 @@ class Player extends MovingObject
          this.bullet.placeInHex(this.currentHex);
          this.bullet.followPath(path);
       }
+      else
+      {
+         this.enableFireMode(false);
+      }
    }
 
    aim(worldPoint)
