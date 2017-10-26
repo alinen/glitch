@@ -607,8 +607,9 @@ function initObjects(gameState)
     {
         hexBoard.setHexType(bloodcells[i], CAVE.BLOOD);
         var npc = new NPC(-1); // infinite
+        npc.type = CAVE.BLOOD;
         npc.placeInHex(bloodcells[i]);
-        npc.translate.x += 0.2;
+        npc.translate.x += 0.5;
         objects.push(
         {
            geometry: GEOMETRY.BLOOD,
@@ -620,8 +621,9 @@ function initObjects(gameState)
         gos.push(npc); 
 
         npc = new NPC(-1); // infinite
+        npc.type = CAVE.BLOOD;
         npc.placeInHex(bloodcells[i]);
-        npc.translate.x -= 0.2;
+        npc.translate.x -= 0.5;
         objects.push(
         {
            geometry: GEOMETRY.BLOOD,
