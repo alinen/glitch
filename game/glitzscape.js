@@ -357,13 +357,9 @@ function initBuffers()
     });
 
     //--
+
     hexBoard.initBoard();
     hexBoard.computeMaze();
-    //left = -worldSize+hexBoard.bRes;
-    //right = -worldSize+hexBoard.hexWidth;
-    //bottom =  -worldSize + hexBoard.r; 
-    //up =  worldSize;
-
     geometry.push(
     {
        vertexBuffer :  createGlBuffer(hexBoard.vertices, 3, hexBoard.vertices.length/3, gl.STATIC_DRAW),
@@ -612,6 +608,7 @@ function initObjects(gameState)
         hexBoard.setHexType(bloodcells[i], CAVE.BLOOD);
         var npc = new NPC(-1); // infinite
         npc.placeInHex(bloodcells[i]);
+        npc.translate.x += 0.2;
         objects.push(
         {
            geometry: GEOMETRY.BLOOD,
@@ -619,7 +616,20 @@ function initObjects(gameState)
            shader : shaderTex,
            texture: backgroundTex
         });
+        npc.scale = 0.1;
+        gos.push(npc); 
 
+        npc = new NPC(-1); // infinite
+        npc.placeInHex(bloodcells[i]);
+        npc.translate.x -= 0.2;
+        objects.push(
+        {
+           geometry: GEOMETRY.BLOOD,
+           goId : gos.length,
+           shader : shaderTex,
+           texture: backgroundTex
+        });
+        npc.scale = 0.1;
         gos.push(npc); 
     }
 
@@ -753,13 +763,19 @@ function nextCave()
     hexBoard.resetBoard();
     hexBoard.computeMaze();
     initObjects(gameState);
-    numCaves = numCaves + 1;
-}
 
-function spawnFatigue()
-{
-   showMessage('spawn');
-   loseGame();
+    // ASN DEBUGGING -- show generated game
+    hexBoard.showBoard();
+    gos.forEach(function(go) 
+    {
+       console.log(go.type);
+       if (go.type !== -1) 
+       {
+        go.enabled = true;
+       }
+    });
+
+    numCaves = numCaves + 1;
 }
 
 function badBullet()
@@ -823,10 +839,6 @@ function updateGame()
          {
             enterBeastCavern();
          }
-         else if (player.getDeathCause() === DEAD.SPAWN) // todo
-         {
-            spawnFatigue();
-         }
       }
       else if (player.isVictor())
       {
@@ -851,13 +863,6 @@ function lookupNPC(idx)
 
 function updateHUD()
 {
-   for (var i = 0; i < 6; i++)
-   {
-      if (i < player.health) $("#HB"+i).css('background','red');
-      else $("#HB"+i).css('background','black');
-   }
-
-   // TODO: Update ammo count
 }
 
 function tick() 
@@ -893,7 +898,7 @@ function webGLStart()
     loadTextures();
 
     gameState = new GameState();
-    initObjects(gameState);
+    nextCave();
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); 

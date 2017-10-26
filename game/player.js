@@ -119,7 +119,6 @@ class Player extends MovingObject
             if (npc.type == CAVE.SPAWN)
             {
                this.health -= gameState.spawnDamage;
-               if (this.health === 0) this.kill(DEAD.SPAWN);
             }
             else if (npc.type == CAVE.HEART)
             {

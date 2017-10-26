@@ -2,14 +2,14 @@ var CAVE =
 {
    EMPTY: 0,
    BLOOD: 1,
-   BEAST: 2,
-   STAR: 3,
-   ORB: 4,
-   HEART: 5,
-   SPAWN: 6,
-   PLAYER: 7,
-   TEETH: 8,
-   BULLET: 9
+   BEAST: 4,
+   STAR: 5,
+   ORB: 6,
+   HEART: 7,
+   SPAWN: 8,
+   PLAYER: 9,
+   TEETH: 10,
+   BULLET: 11
 }
 
 class MazeNode
@@ -93,7 +93,7 @@ class HexBoard
       colorList.push(1.0);
       colorList.push(1.0);
       colorList.push(1.0);
-      colorList.push(0.0);      
+      colorList.push(0.0);
    }
 
    initBoard()
@@ -184,7 +184,7 @@ class HexBoard
          this.colors[i+0] = 1.0;
          this.colors[i+1] = 1.0;
          this.colors[i+2] = 1.0;
-         this.colors[i+3] = 0.0;
+         this.colors[i+3] = 0.0; 
       }
    }
 
@@ -454,6 +454,14 @@ class HexBoard
    {
       if (idx < 0 || idx > this.maze.length) return false;
       return this.maze[idx].visited;
+   }
+
+   showBoard()
+   {
+      for (var i = 0; i < this.numHex; i++)
+      {
+          this.showHexById(i);
+      }
    }
 
    showHexById(idx)
