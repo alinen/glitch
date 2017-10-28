@@ -584,7 +584,7 @@ function initBuffers()
 
 function initBloodSpot(cellId, pos, scale)
 {
-    var npc = new NPC(CAVE.BLOOD); 
+    var npc = new Item(CAVE.BLOOD, 10.0); 
     npc.placeInHex(cellId);
     npc.translate.x += pos[0];
     npc.translate.y += pos[1];
@@ -600,24 +600,8 @@ function initBloodSpot(cellId, pos, scale)
     return npc;
 }
 
-function initObjects(gameState)
-{      
-    objects = []; // links graphics objects to game object
-    gos = [];
-
-    // -- background game objects
-    objects.push(
-    {
-        geometry: GEOMETRY.HEX,
-        goId : gos.length,
-        shader : shaderNoise,
-        texture: backgroundTex
-    });
-    var background = new GameObject();
-    background.translate = hexBoard.gridPos;
-    gos.push(background);
-
-    //--- NPC game objects and item pickups
+function placeWampus()
+{
     var idx = hexBoard.findEmpty(); // don't allow blood and other things in same cell
     hexBoard.setHexType(idx, CAVE.BEAST);   
     var bloodcells = hexBoard.getNeighbors(idx);
@@ -662,6 +646,31 @@ function initObjects(gameState)
             }
         }
     }*/
+
+}
+
+function initObjects(gameState)
+{      
+    objects = []; // links graphics objects to game object
+    gos = [];
+
+    // -- background game objects
+    objects.push(
+    {
+        geometry: GEOMETRY.HEX,
+        goId : gos.length,
+        shader : shaderNoise,
+        texture: backgroundTex
+    });
+    var background = new GameObject();
+    background.translate = hexBoard.gridPos;
+    gos.push(background);
+
+    //--- NPC game objects and item pickups
+    for (var i = 0; i < gameState.numWampus; i++)
+    {
+        placeWampus();
+    }
 
     gameState.items.forEach(function(item)
     {

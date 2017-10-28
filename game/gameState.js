@@ -21,6 +21,7 @@ class GameState
       this.health = 4;
       this.starDuration = 10;
       this.spawnDamage = 1;
+      this.numWampus = 10;
       this.items = [
       {
          num: 16,
