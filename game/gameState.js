@@ -37,8 +37,8 @@ class GameState
       {
          num: 1,
          respawnTime: 10,
-         type: CAVE.HEART,
-         geom: GEOMETRY.HEART
+         type: CAVE.ORB,
+         geom: GEOMETRY.ORB
       }
       ];
    }

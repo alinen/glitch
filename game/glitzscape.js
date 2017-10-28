@@ -31,7 +31,7 @@ var objects = [];
 // game state
 var lastMouseX = null;
 var lastMouseY = null;
-var worldSize = 10.0;
+var worldSize = 20.0;
 var lastTime = 0;
 var player = new Player();
 var hexBoard = new HexBoard(1.5, worldSize, 0.2);
@@ -493,11 +493,11 @@ function initBuffers()
     var deltaAngle = 4*Math.PI/slices;
     for (var i = 0; i < slices; i++)
     {
-       var x1 = 2*Math.cos(deltaAngle*i);
-       var y1 = 2*Math.sin(deltaAngle*i);
+       var x1 = 3.5*Math.cos(deltaAngle*i);
+       var y1 = 3.5*Math.sin(deltaAngle*i);
 
-       var x2 = 2*Math.cos(deltaAngle*(i+1));
-       var y2 = 2*Math.sin(deltaAngle*(i+1));
+       var x2 = 3.5*Math.cos(deltaAngle*(i+1));
+       var y2 = 3.5*Math.sin(deltaAngle*(i+1));
 
        vertices.push(0);
        vertices.push(0);
@@ -511,19 +511,19 @@ function initBuffers()
        vertices.push(y2);
        vertices.push(0.0);
 
-       colors.push(1.0);
-       colors.push(1.0);
-       colors.push(1.0);
-       colors.push(1.0);
-
-       colors.push(1.0);
-       colors.push(1.0);
-       colors.push(1.0);
+       colors.push(0.0);
+       colors.push(0.0);
+       colors.push(0.0);
        colors.push(1.0);
 
+       colors.push(0.0);
+       colors.push(0.0);
+       colors.push(0.0);
        colors.push(1.0);
-       colors.push(1.0);
-       colors.push(1.0);
+
+       colors.push(0.0);
+       colors.push(0.0);
+       colors.push(0.0);
        colors.push(1.0);
        
        texs.push(0.0);
@@ -582,6 +582,24 @@ function initBuffers()
     });
 }
 
+function initBloodSpot(cellId, pos, scale)
+{
+    var npc = new NPC(CAVE.BLOOD); 
+    npc.placeInHex(cellId);
+    npc.translate.x += pos[0];
+    npc.translate.y += pos[1];
+    npc.translate.z += pos[2];
+    objects.push(
+    {
+       geometry: GEOMETRY.BLOOD,
+       goId : gos.length,
+       shader : shaderTex,
+       texture: backgroundTex
+    });
+    npc.scale = scale;
+    return npc;
+}
+
 function initObjects(gameState)
 {      
     objects = []; // links graphics objects to game object
@@ -606,40 +624,58 @@ function initObjects(gameState)
     for (var i = 0; i < bloodcells.length; i++)
     {
         hexBoard.setHexType(bloodcells[i], CAVE.BLOOD);
-        var npc = new NPC(-1); // infinite
-        npc.type = CAVE.BLOOD;
-        npc.placeInHex(bloodcells[i]);
-        npc.translate.x += 0.5;
-        objects.push(
-        {
-           geometry: GEOMETRY.BLOOD,
-           goId : gos.length,
-           shader : shaderTex,
-           texture: backgroundTex
-        });
-        npc.scale = 0.1;
-        gos.push(npc); 
-
-        npc = new NPC(-1); // infinite
-        npc.type = CAVE.BLOOD;
-        npc.placeInHex(bloodcells[i]);
-        npc.translate.x -= 0.5;
-        objects.push(
-        {
-           geometry: GEOMETRY.BLOOD,
-           goId : gos.length,
-           shader : shaderTex,
-           texture: backgroundTex
-        });
-        npc.scale = 0.1;
+        var npc = initBloodSpot(bloodcells[i], [0,0,0.0], 0.25);
         gos.push(npc); 
     }
+
+    // get neighbors of neighbors (2 away)
+    for (var i = 0; i < bloodcells.length; i++)
+    {
+        var neighbors2 = hexBoard.getNeighbors(bloodcells[i]);
+        for (var j = 0; j < neighbors2.length; j++)
+        {
+            if (hexBoard.getHexType(neighbors2[j]) === CAVE.EMPTY)
+            {
+                hexBoard.setHexType(neighbors2[j], CAVE.BLOOD);
+                var npc = initBloodSpot(neighbors2[j], [0,0,0.0], 0.15);
+                gos.push(npc); 
+            }
+        }
+    }
+
+    /*
+    // get 3 away neighbors
+    for (var i = 0; i < bloodcells.length; i++)
+    {
+        var neighbors2 = hexBoard.getNeighbors(bloodcells[i]);
+        for (var j = 0; j < neighbors2.length; j++)
+        {
+            var neighbors3 = hexBoard.getNeighbors(neighbors2[j]);
+            for (var k = 0; k < neighbors3.length; k++)
+            {
+                if (hexBoard.getHexType(neighbors3[k]) === CAVE.EMPTY)
+                {
+                    hexBoard.setHexType(neighbors3[k], CAVE.BLOOD);
+                    var npc = initBloodSpot(neighbors3[k], [0,0,0.0], 0.05);
+                    gos.push(npc); 
+                }
+            }
+        }
+    }*/
 
     gameState.items.forEach(function(item)
     {
        for (var j = 0; j < item.num; j++)
        {
-          var npc = new Item(item.type, item.respawnTime);
+          var npc = null;
+          if (item.type === CAVE.SPAWN)
+          {
+             npc = new Spawn(item.type);
+          }
+          else
+          {
+             npc = new NPC(item.type);
+          }
           var idx = hexBoard.findEmpty();
           npc.placeInHex(idx);
           hexBoard.setHexType(idx,item.type);
@@ -658,7 +694,7 @@ function initObjects(gameState)
 
 
     // monster teeth
-    upperTeeth = new Teeth(CAVE.TEETH, 0);
+    upperTeeth = new Teeth(CAVE.TEETH);
     objects.push(
     {    
        geometry: GEOMETRY.QUAD,
@@ -668,7 +704,7 @@ function initObjects(gameState)
     });    
     gos.push(upperTeeth); 
 
-    lowerTeeth = new Teeth(CAVE.TEETH, 0);
+    lowerTeeth = new Teeth(CAVE.TEETH);
     objects.push(
     {    
        geometry: GEOMETRY.QUAD,
@@ -691,6 +727,7 @@ function initObjects(gameState)
     });
     gos.push(player);
 
+    /*
     objects.push(
     {
        geometry: GEOMETRY.STAR,
@@ -699,6 +736,7 @@ function initObjects(gameState)
        texture: backgroundTex
     });
     gos.push(player.bullet);
+    */
 }
 
 function drawScene() 
@@ -771,7 +809,7 @@ function nextCave()
     gos.forEach(function(go) 
     {
        console.log(go.type);
-       if (go.type !== -1) 
+       if (go.type !== CAVE.TEETH) 
        {
         go.enabled = true;
        }
@@ -799,8 +837,8 @@ function loseGame()
    {
       gos[i].enabled = false;
    }   
-   upperTeeth.start({x:0.0,y:20.0}, Math.PI, {x:0.0,y:-10.0});
-   lowerTeeth.start({x:0.0,y:-20.0}, Math.PI*2, {x:0.0,y:10.0});   
+   upperTeeth.start({x:0.0,y:worldSize*2}, Math.PI, {x:0.0,y:-10.0});
+   lowerTeeth.start({x:0.0,y:-worldSize*2}, Math.PI*2, {x:0.0,y:10.0});   
 }
 
 function winGame()

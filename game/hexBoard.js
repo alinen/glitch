@@ -472,15 +472,15 @@ class HexBoard
 
    setHexAlphaById(idx, alpha, uncovered = true)
    {
-      var showBlood = (this.maze[idx].type === CAVE.BEAST || this.maze[idx].type === CAVE.BLOOD) && uncovered;
+      var showBlood = false; // disabled (this.maze[idx].type === CAVE.BEAST || this.maze[idx].type === CAVE.BLOOD) && uncovered;
       var offset = idx * 18 * 4; // idx * #hexvertices * numcolorchannels
       for (var i = 0; i < 18; i++)
       {
          if (showBlood)
          {
             this.colors[offset+i*4+0] = 1.0;
-            this.colors[offset+i*4+1] = 0.2;
-            this.colors[offset+i*4+2] = 0.2;
+            this.colors[offset+i*4+1] = 0.4;
+            this.colors[offset+i*4+2] = 0.6;
          }
          this.colors[offset+i*4+3] = alpha;
       } 
@@ -501,8 +501,8 @@ class HexBoard
                if (showBlood && showNeighborBlood)
                {
                   this.colors[neighborGeomIdx+i*4+0] = 1.0;
-                  this.colors[neighborGeomIdx+i*4+1] = 0.2;
-                  this.colors[neighborGeomIdx+i*4+2] = 0.2;                  
+                  this.colors[neighborGeomIdx+i*4+1] = 0.4;
+                  this.colors[neighborGeomIdx+i*4+2] = 0.6;                  
                }
                this.colors[neighborGeomIdx+i*4+3] = alpha;
             }
