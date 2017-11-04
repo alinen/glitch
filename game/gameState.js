@@ -21,10 +21,10 @@ class GameState
       this.health = 4;
       this.starDuration = 10;
       this.spawnDamage = 1;
-      this.numWampus = 10;
+      this.numWampus = 1;
       this.items = [
       {
-         num: 16,
+         num: 0,
          respawnTime: 5,
          type: CAVE.SPAWN,
          geom: GEOMETRY.SPAWN

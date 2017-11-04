@@ -31,10 +31,10 @@ var objects = [];
 // game state
 var lastMouseX = null;
 var lastMouseY = null;
-var worldSize = 20.0;
+var worldSize = 10.0;
 var lastTime = 0;
 var player = new Player();
-var hexBoard = new HexBoard(1.5, worldSize, 0.2);
+var hexBoard = null; 
 var gameState = null;
 var gos = []; // game objects
 var left = -worldSize;
@@ -48,7 +48,6 @@ var lowerTeeth = null;
 var upperTeeth = null;
 var highlightIdx = -1;
 var numCaves = 0;
-var maxCaves = 3; // Set number of caves to escape to win game
 var currentMsg = null;
 
 // sound effects
@@ -361,6 +360,7 @@ function initBuffers()
 
     //--
 
+    hexBoard = new HexBoard(1.5, worldSize, 0.2);
     hexBoard.initBoard();
     hexBoard.computeMaze();
     geometry.push(
@@ -894,12 +894,10 @@ function updateGame()
       }
       else if (player.isVictor())
       {
-         if (numCaves < maxCaves) 
-         {
-            nextCave();
-            showMessage('slain');
-         }
-         else winGame();
+          worldSpace += 2.0;
+          gameState.numWampus += 1;
+          nextCave();
+          showMessage('escape');
       }
    }
 }

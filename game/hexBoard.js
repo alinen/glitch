@@ -545,8 +545,13 @@ class HexBoard
 
    findEmpty()
    {
+      var count = 0;
       var idx = Math.floor(Math.random() * this.numHex);
-      while (this.getHexType(idx) !== CAVE.EMPTY) idx = (idx + 1) % this.numHex;
+      while (this.getHexType(idx) !== CAVE.EMPTY && count < this.numHex)
+      {
+          idx = (idx + 1) % this.numHex;
+          count++;
+      }
       return idx;
    }
    

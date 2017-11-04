@@ -111,20 +111,13 @@ class Player extends MovingObject
       {
          this.kill(DEAD.BEAST);
       }      
+      else if (type === CAVE.ORB)
+      {
+         this.mode = PLAYER_MODE.VICTOR;
+      }
       else if (idx !== this.path[0]) 
       {
          var npc = lookupNPC(idx);
-         if (npc && npc.enabled)
-         {
-            if (npc.type == CAVE.SPAWN)
-            {
-               this.health -= gameState.spawnDamage;
-            }
-            else if (npc.type == CAVE.HEART)
-            {
-               this.health = this.health + 1; // increase health
-            }
-         }
          if (npc) npc.reactTo(this);         
       }
    }
