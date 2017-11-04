@@ -50,7 +50,6 @@ var highlightIdx = -1;
 var numCaves = 0;
 var maxCaves = 3; // Set number of caves to escape to win game
 var currentMsg = null;
-var firstFrame = true;
 
 // sound effects
 var sound = null; 
@@ -920,11 +919,6 @@ function updateHUD()
 
 function tick() 
 {
-    if (firstFrame)
-    {
-        sound.playLoop("ambient");
-        firstFrame = false;
-    }
     requestAnimFrame(tick);
     drawScene();
     animate();
