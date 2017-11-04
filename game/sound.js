@@ -26,7 +26,7 @@ class Sound
                 that.playLoop("ambient");
             }
         });
-        createjs.Sound.registerSound("sounds/210794__diboz__clockwatcher.wav", "ambient");
+        createjs.Sound.registerSound("sounds/92734__tj-mothy__slow-sad-tones.wav", "ambient");
         createjs.Sound.registerSound("sounds/165331__ani-music__tubular-bell-of-death.wav", "gong");
         createjs.Sound.registerSound("sounds/15073__jovica__tubular-system-g-3.wav", "pitch");
 
