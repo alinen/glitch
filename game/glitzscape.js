@@ -692,6 +692,11 @@ function initObjects(gameState)
           npc.placeInHex(idx);
           hexBoard.setHexType(idx,item.type);
 
+          if (item.type === CAVE.ORB)
+          {
+             gameState.exitIdx = idx;
+          }
+
           objects.push(
           {
              geometry: item.geom,
@@ -728,6 +733,20 @@ function initObjects(gameState)
 
     //-- player object
     var idx = hexBoard.findEmpty();
+    // check that start has a solution!
+    var count = 0;
+    var path = hexBoard.computePath(idx, gameState.exitIdx, false);
+    while (path.length === 0 && count < hexBoard.numHex) 
+    {
+        idx = (idx + 1) % hexBoard.numHex;
+        path = hexBoard.computePath(idx, gameState.exitIdx, false);
+        count = count + 1;
+    }
+    if (count === hexBoard.numHex)
+    {
+        console.log("Could not place player!");
+        showMessage("slain"); // should be "you win"
+    }
     player.placeInHex(idx);    
     player.init();
     objects.push(
@@ -894,7 +913,7 @@ function updateGame()
       }
       else if (player.isVictor())
       {
-          worldSpace += 2.0;
+          worldSize += 2.0;
           gameState.numWampus += 1;
           nextCave();
           showMessage('escape');

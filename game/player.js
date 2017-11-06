@@ -136,14 +136,14 @@ class Player extends MovingObject
          var visibleNeighbor = hexBoard.hasVisibleNeighbor(hexIdx);
          if (visibleNeighbor !== -1) 
          {
-            var path = hexBoard.computePath(this.currentHex, visibleNeighbor, true);
+            var path = hexBoard.computePath(this.currentHex, visibleNeighbor, true, false);
             path.push(hexIdx);
             this.followPath(path);
          }
       }
       else if (isVisible)
       {
-         var path = hexBoard.computePath(this.currentHex, hexIdx, true);
+         var path = hexBoard.computePath(this.currentHex, hexIdx, true, false);
          this.followPath(path);
       }      
    }
@@ -155,7 +155,7 @@ class Player extends MovingObject
 
       if (hexBoard.isNeighbor(this.currentHex, hexIdx))
       {
-         var path = hexBoard.computePath(this.currentHex, hexIdx);
+         var path = hexBoard.computePath(this.currentHex, hexIdx, false, false);
          this.bullet.enabled = true;
          this.bullet.placeInHex(this.currentHex);
          this.bullet.followPath(path);

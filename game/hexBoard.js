@@ -226,6 +226,22 @@ class HexBoard
          }
       }
 
+      // remove some walls to make the regions more interesting
+      for (var idx = 0; idx < this.numHex; idx++)
+      {
+          var allNeighbors = this.getNeighbors(idx);
+          for (var n = 0; n < allNeighbors.length; n++)
+          {
+              var r = Math.random(); 
+              var nidx = allNeighbors[n];
+              if (r < 0.1 && !this.isNeighbor(nidx, idx))
+              {
+                  this.maze[idx].neighbors.push(nidx);
+                  this.maze[nidx].neighbors.push(idx);
+              }
+          }
+      }
+
       // reset visited state for player to explore
       for (var i = 0; i < this.numHex; i++)
       {
@@ -259,7 +275,7 @@ class HexBoard
       return distance;
    }
 
-   computePath(startIdx, targetIdx, visibleOnly)
+   computePath(startIdx, targetIdx, visibleOnly, avoidWampus)
    {
       var prevNode = [];
       var g = []; // real path len
@@ -300,6 +316,11 @@ class HexBoard
             if (visibleOnly && this.isVisibleHex(neighborIdx) === false)
             {
                continue;
+            }
+
+            if (avoidWampus && this.getHexType(neighborIdx) === CAVE.ORB)
+            {
+                continue;
             }
 
             if (this.isNeighbor(currentIdx, neighborIdx))

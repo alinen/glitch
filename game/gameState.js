@@ -24,7 +24,7 @@ class GameState
       this.numWampus = 1;
       this.items = [
       {
-         num: 0,
+         num: 5,
          respawnTime: 5,
          type: CAVE.SPAWN,
          geom: GEOMETRY.SPAWN

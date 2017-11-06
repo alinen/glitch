@@ -133,7 +133,7 @@ class Spawn extends NPC
          if (!this.isMoving() && this.timer < 0)
          {         
             var nextHex = Math.floor(Math.random() *  hexBoard.numHex);
-            var path = hexBoard.computePath(this.currentHex, nextHex);
+            var path = hexBoard.computePath(this.currentHex, nextHex, false, false);
             this.followPath(path);
          }
       }
