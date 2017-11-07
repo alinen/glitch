@@ -174,7 +174,7 @@ class HexBoard
       this.colors = new Float32Array(colorList);
       this.uvs = new Float32Array(textureList);
 
-      console.log("Init board: " + this.numRows + " " + this.numCols + " " + this.numHex + " "+ this.vertices.length/3);
+      //console.log("Init board: " + this.numRows + " " + this.numCols + " " + this.numHex + " "+ this.vertices.length/3);
    }   
 
    resetBoard()
@@ -236,8 +236,11 @@ class HexBoard
               var nidx = allNeighbors[n];
               if (r < 0.1 && !this.isNeighbor(nidx, idx))
               {
-                  this.maze[idx].neighbors.push(nidx);
-                  this.maze[nidx].neighbors.push(idx);
+                  if (!this.isNeighbor(idx, nidx)) // guard against multiple adds
+                  {
+                     this.maze[idx].neighbors.push(nidx);
+                     this.maze[nidx].neighbors.push(idx);
+                  }
               }
           }
       }
@@ -313,6 +316,7 @@ class HexBoard
          for (var n = 0; n < allNeighbors.length; n++)
          {
             var neighborIdx = allNeighbors[n];
+            /*
             if (visibleOnly && this.isVisibleHex(neighborIdx) === false)
             {
                continue;
@@ -321,7 +325,7 @@ class HexBoard
             if (avoidWampus && this.getHexType(neighborIdx) === CAVE.ORB)
             {
                 continue;
-            }
+            }*/
 
             if (this.isNeighbor(currentIdx, neighborIdx))
             {
@@ -646,6 +650,7 @@ class HexBoard
          idx = this.cellToId(cell);
       } 
 
+      //console.log("Clicked cell "+cell.i+" "+cell.j+" id: "+idx);
       return idx;
    }
    

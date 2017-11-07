@@ -72,6 +72,7 @@ class Player extends MovingObject
       this.mode = PLAYER_MODE.NORMAL;
       this.bullet = new Bullet();
       this.death = DEAD.NONE;
+      this.cellType = -1;
    }
 
    init()
@@ -93,7 +94,7 @@ class Player extends MovingObject
 
    update(dt)
    {
-      if (this.mode == PLAYER_MODE.NORMAL)
+      if (this.mode === PLAYER_MODE.NORMAL)
       {
          super.update(dt);
          if (Math.abs(this.dir.y) > 0.0 || Math.abs(this.dir.x) > 0.0)
@@ -106,6 +107,8 @@ class Player extends MovingObject
    _reachedTarget(idx)
    {
       hexBoard.showHexById(idx);
+
+      this.cellType = -1;
       var type = hexBoard.getHexType(idx);
       if (type === CAVE.BEAST)
       {
@@ -115,7 +118,21 @@ class Player extends MovingObject
       {
          this.mode = PLAYER_MODE.VICTOR;
       }
-      else if (idx !== this.path[0]) 
+      else if (type === CAVE.BLOOD)
+      {
+          this.cellType = 2;
+          var allNeighbors = hexBoard.getNeighbors(idx);
+          for (var n = 0; n < allNeighbors.length; n++)
+          {
+              var nidx = allNeighbors[n];
+              if (hexBoard.getHexType(nidx) === CAVE.BEAST)
+              {
+                 this.cellType = 1;
+                 break;
+              }
+          }
+      }
+      if (idx !== this.path[0]) 
       {
          var npc = lookupNPC(idx);
          if (npc) npc.reactTo(this);         
@@ -207,6 +224,15 @@ class Player extends MovingObject
    getFireMode()
    {
       return this.mode === PLAYER_MODE.FIRE;
+   }
+
+   twoAway()
+   {
+       return this.cellType === 2;
+   }
+   oneAway()
+   {
+       return this.cellType === 1;
    }
 
    isVictor()

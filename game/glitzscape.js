@@ -31,7 +31,7 @@ var objects = [];
 // game state
 var lastMouseX = null;
 var lastMouseY = null;
-var worldSize = 10.0;
+var worldSize = 14.0;
 var lastTime = 0;
 var player = new Player();
 var hexBoard = null; 
@@ -252,6 +252,7 @@ function handleMouseDown(event)
    }
    else
    {
+       /*
       if (event.ctrlKey)
       {
          player.enableFireMode(true);
@@ -259,7 +260,7 @@ function handleMouseDown(event)
          player.aim(wp);
          player.fire(wp);
       }
-      else
+      else*/
       {
          player.move({x:lastMouseX, y:lastMouseY});
       }
@@ -365,7 +366,7 @@ function initBuffers()
     hexBoard.computeMaze();
     geometry.push(
     {
-       vertexBuffer :  createGlBuffer(hexBoard.vertices, 3, hexBoard.vertices.length/3, gl.STATIC_DRAW),
+       vertexBuffer :  createGlBuffer(hexBoard.vertices, 3, hexBoard.vertices.length/3, gl.DYNAMIC_DRAW),
        colorBuffer :   createGlBuffer(hexBoard.colors, 4, hexBoard.colors.length/4, gl.DYNAMIC_DRAW),
        textureBuffer : createGlBuffer(hexBoard.uvs, 2, hexBoard.uvs.length/2, gl.STATIC_DRAW),
        vertexDynamic : null,
@@ -836,16 +837,16 @@ function nextCave()
     initObjects(gameState);
 
     // ASN DEBUGGING -- show generated game
-    hexBoard.showBoard();
-    gos.forEach(function(go) 
-    {
-       console.log(go.type);
-       if (go.type !== CAVE.TEETH) 
-       {
+    /*
+     hexBoard.showBoard();
+     gos.forEach(function(go) 
+     {
+        if (go.type !== CAVE.TEETH) 
+        {
         go.enabled = true;
-       }
-    });
-
+        }
+     });
+*/
     numCaves = numCaves + 1;
 }
 
@@ -913,10 +914,18 @@ function updateGame()
       }
       else if (player.isVictor())
       {
-          worldSize += 2.0;
-          gameState.numWampus += 1;
-          nextCave();
-          showMessage('escape');
+          gameState.numWampus = Math.min(gameState.numWampus + 1, gameState.maxWampus);
+          winGame();
+      }
+      else if (player.twoAway() && !gameState.showDanger2)
+      {
+          showMessage('danger2');
+          gameState.showDanger2 = true;
+      }
+      else if (player.oneAway() && !gameState.showDanger1)
+      {
+          showMessage('danger1');
+          gameState.showDanger1 = true;
       }
    }
 }
@@ -945,6 +954,7 @@ function tick()
 
 function showMessage(name)
 {
+   if (currentMsg !== null) return;
    currentMsg = name;
 
    var canvas = document.getElementById("game-canvas");
