@@ -234,12 +234,21 @@ class HexBoard
           {
               var r = Math.random(); 
               var nidx = allNeighbors[n];
-              if (r < 0.1 && !this.isNeighbor(nidx, idx))
+              if (r < 0.1) 
               {
+                  if (!this.isNeighbor(nidx, idx))
+                  {
+                     this.maze[nidx].neighbors.push(idx);
+                  }
+
                   if (!this.isNeighbor(idx, nidx)) // guard against multiple adds
                   {
                      this.maze[idx].neighbors.push(nidx);
-                     this.maze[nidx].neighbors.push(idx);
+                  }
+
+                  if (!this.isNeighbor(nidx,idx) || !this.isNeighbor(idx,nidx))
+                  {
+                      console.log("ERROR!! "+nidx+" "+idx);
                   }
               }
           }
@@ -291,6 +300,7 @@ class HexBoard
       }
 
       // find path from target to start (assumes all paths are bidirectional)
+      //console.log("FIND PATH: start "+startIdx+" to "+targetIdx);
       var Q = [targetIdx]; // open set
       g[targetIdx] = 0;
       h[targetIdx] = this.computeDistance(startIdx, targetIdx);
@@ -316,7 +326,6 @@ class HexBoard
          for (var n = 0; n < allNeighbors.length; n++)
          {
             var neighborIdx = allNeighbors[n];
-            /*
             if (visibleOnly && this.isVisibleHex(neighborIdx) === false)
             {
                continue;
@@ -325,7 +334,7 @@ class HexBoard
             if (avoidWampus && this.getHexType(neighborIdx) === CAVE.ORB)
             {
                 continue;
-            }*/
+            }
 
             if (this.isNeighbor(currentIdx, neighborIdx))
             {

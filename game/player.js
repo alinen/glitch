@@ -153,8 +153,7 @@ class Player extends MovingObject
          var visibleNeighbor = hexBoard.hasVisibleNeighbor(hexIdx);
          if (visibleNeighbor !== -1) 
          {
-            var path = hexBoard.computePath(this.currentHex, visibleNeighbor, true, false);
-            path.push(hexIdx);
+            var path = hexBoard.computePath(this.currentHex, hexIdx, false, false);
             this.followPath(path);
          }
       }
