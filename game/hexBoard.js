@@ -2,13 +2,14 @@ var CAVE =
 {
    EMPTY: 0,
    BLOOD: 1,
-   BEAST: 2,
-   STAR: 3,
-   ORB: 4,
-   HEART: 5,
-   SPAWN: 6,
-   PLAYER: 7,
-   TEETH: 8
+   BEAST: 4,
+   STAR: 5,
+   ORB: 6,
+   HEART: 7,
+   SPAWN: 8,
+   PLAYER: 9,
+   TEETH: 10,
+   BULLET: 11
 }
 
 class MazeNode
@@ -92,7 +93,7 @@ class HexBoard
       colorList.push(1.0);
       colorList.push(1.0);
       colorList.push(1.0);
-      colorList.push(0.0);      
+      colorList.push(0.0);
    }
 
    initBoard()
@@ -173,8 +174,19 @@ class HexBoard
       this.colors = new Float32Array(colorList);
       this.uvs = new Float32Array(textureList);
 
-      console.log("Init board: " + this.numRows + " " + this.numCols + " " + this.numHex + " "+ this.vertices.length/3);
+      //console.log("Init board: " + this.numRows + " " + this.numCols + " " + this.numHex + " "+ this.vertices.length/3);
    }   
+
+   resetBoard()
+   {
+      for (var i = 0; i < this.colors.length; i += 4)
+      {
+         this.colors[i+0] = 1.0;
+         this.colors[i+1] = 1.0;
+         this.colors[i+2] = 1.0;
+         this.colors[i+3] = 0.0; 
+      }
+   }
 
    computeMaze()
    {
@@ -214,6 +226,34 @@ class HexBoard
          }
       }
 
+      // remove some walls to make the regions more interesting
+      for (var idx = 0; idx < this.numHex; idx++)
+      {
+          var allNeighbors = this.getNeighbors(idx);
+          for (var n = 0; n < allNeighbors.length; n++)
+          {
+              var r = Math.random(); 
+              var nidx = allNeighbors[n];
+              if (r < 0.1) 
+              {
+                  if (!this.isNeighbor(nidx, idx))
+                  {
+                     this.maze[nidx].neighbors.push(idx);
+                  }
+
+                  if (!this.isNeighbor(idx, nidx)) // guard against multiple adds
+                  {
+                     this.maze[idx].neighbors.push(nidx);
+                  }
+
+                  if (!this.isNeighbor(nidx,idx) || !this.isNeighbor(idx,nidx))
+                  {
+                      console.log("ERROR!! "+nidx+" "+idx);
+                  }
+              }
+          }
+      }
+
       // reset visited state for player to explore
       for (var i = 0; i < this.numHex; i++)
       {
@@ -247,7 +287,7 @@ class HexBoard
       return distance;
    }
 
-   computePath(startIdx, targetIdx, visibleOnly)
+   computePath(startIdx, targetIdx, visibleOnly, avoidWampus)
    {
       var prevNode = [];
       var g = []; // real path len
@@ -260,6 +300,7 @@ class HexBoard
       }
 
       // find path from target to start (assumes all paths are bidirectional)
+      //console.log("FIND PATH: start "+startIdx+" to "+targetIdx);
       var Q = [targetIdx]; // open set
       g[targetIdx] = 0;
       h[targetIdx] = this.computeDistance(startIdx, targetIdx);
@@ -288,6 +329,11 @@ class HexBoard
             if (visibleOnly && this.isVisibleHex(neighborIdx) === false)
             {
                continue;
+            }
+
+            if (avoidWampus && this.getHexType(neighborIdx) === CAVE.ORB)
+            {
+                continue;
             }
 
             if (this.isNeighbor(currentIdx, neighborIdx))
@@ -444,6 +490,14 @@ class HexBoard
       return this.maze[idx].visited;
    }
 
+   showBoard()
+   {
+      for (var i = 0; i < this.numHex; i++)
+      {
+          this.showHexById(i);
+      }
+   }
+
    showHexById(idx)
    {
       this.maze[idx].visited = true;
@@ -452,15 +506,15 @@ class HexBoard
 
    setHexAlphaById(idx, alpha, uncovered = true)
    {
-      var showBlood = (this.maze[idx].type === CAVE.BEAST || this.maze[idx].type === CAVE.BLOOD) && uncovered;
+      var showBlood = false; // disabled (this.maze[idx].type === CAVE.BEAST || this.maze[idx].type === CAVE.BLOOD) && uncovered;
       var offset = idx * 18 * 4; // idx * #hexvertices * numcolorchannels
       for (var i = 0; i < 18; i++)
       {
          if (showBlood)
          {
             this.colors[offset+i*4+0] = 1.0;
-            this.colors[offset+i*4+1] = 0.2;
-            this.colors[offset+i*4+2] = 0.2;
+            this.colors[offset+i*4+1] = 0.4;
+            this.colors[offset+i*4+2] = 0.6;
          }
          this.colors[offset+i*4+3] = alpha;
       } 
@@ -481,8 +535,8 @@ class HexBoard
                if (showBlood && showNeighborBlood)
                {
                   this.colors[neighborGeomIdx+i*4+0] = 1.0;
-                  this.colors[neighborGeomIdx+i*4+1] = 0.2;
-                  this.colors[neighborGeomIdx+i*4+2] = 0.2;                  
+                  this.colors[neighborGeomIdx+i*4+1] = 0.4;
+                  this.colors[neighborGeomIdx+i*4+2] = 0.6;                  
                }
                this.colors[neighborGeomIdx+i*4+3] = alpha;
             }
@@ -525,8 +579,13 @@ class HexBoard
 
    findEmpty()
    {
+      var count = 0;
       var idx = Math.floor(Math.random() * this.numHex);
-      while (this.getHexType(idx) !== CAVE.EMPTY) idx = (idx + 1) % this.numHex;
+      while (this.getHexType(idx) !== CAVE.EMPTY && count < this.numHex)
+      {
+          idx = (idx + 1) % this.numHex;
+          count++;
+      }
       return idx;
    }
    
@@ -600,6 +659,7 @@ class HexBoard
          idx = this.cellToId(cell);
       } 
 
+      //console.log("Clicked cell "+cell.i+" "+cell.j+" id: "+idx);
       return idx;
    }
    

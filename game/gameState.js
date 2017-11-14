@@ -18,18 +18,22 @@ class GameState
 
    reset()
    {   
-      this.health = 6;
+      this.health = 4;
       this.starDuration = 10;
       this.spawnDamage = 1;
+      this.numWampus = 4;
+      this.maxWampus = 7;
+      this.showDanger1 = false;
+      this.showDanger2 = false;
       this.items = [
       {
-         num: 4,
+         num: 0,
          respawnTime: 5,
          type: CAVE.SPAWN,
          geom: GEOMETRY.SPAWN
       },
       {
-         num: 2,
+         num: 0,
          respawnTime: 10,
          type: CAVE.STAR,
          geom: GEOMETRY.STAR
@@ -37,8 +41,8 @@ class GameState
       {
          num: 1,
          respawnTime: 10,
-         type: CAVE.HEART,
-         geom: GEOMETRY.HEART
+         type: CAVE.ORB,
+         geom: GEOMETRY.ORB
       }
       ];
    }

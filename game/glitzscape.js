@@ -1,5 +1,6 @@
 // constants
 const DEG2RAD = Math.PI / 180.0;
+const DOUBLE_CLICK_THRESH = 0.01;
 
 var GEOMETRY = 
 {
@@ -30,12 +31,12 @@ var objects = [];
 // game state
 var lastMouseX = null;
 var lastMouseY = null;
-var worldSize = 10.0;
+var worldSize = 14.0;
 var lastTime = 0;
 var player = new Player();
-var hexBoard = new HexBoard(2.0, worldSize, 0.2);
+var hexBoard = null; 
 var gameState = null;
-var npcs = [];
+var gos = []; // game objects
 var left = -worldSize;
 var right = worldSize;
 var bottom = -worldSize;
@@ -43,11 +44,14 @@ var up = worldSize;
 var time = 0;
 var paused = true;
 var gameOver = false;
-var titleScreen = null;
-var gameOverScreen = null;
 var lowerTeeth = null;
 var upperTeeth = null;
 var highlightIdx = -1;
+var numCaves = 0;
+var currentMsg = null;
+
+// sound effects
+var sound = null; 
 
 function initGL(canvas) 
 {
@@ -223,6 +227,7 @@ function handleMouseMove(event)
     var sceneY = worldSize - (y * worldSize * 2.0)/canvas.height;
     //console.log(sceneX+" "+sceneY);
 
+    // ASN TODO: Consider moving to hexBoard
     if (highlightIdx !== -1 && !hexBoard.isVisibleHex(highlightIdx))
     {
        hexBoard.setHexAlphaById(highlightIdx, 0, false);
@@ -243,21 +248,42 @@ function handleMouseDown(event)
 {
    if (paused)
    {
-      $("#title").fadeOut();
       paused = false;
    }
    else
    {
-      player.move({x:lastMouseX, y:lastMouseY});
+       /*
+      if (event.ctrlKey)
+      {
+         player.enableFireMode(true);
+         var wp = {x:lastMouseX, y:lastMouseY};
+         player.aim(wp);
+         player.fire(wp);
+      }
+      else*/
+      {
+         player.move({x:lastMouseX, y:lastMouseY});
+      }
+   }
+
+   if (currentMsg)
+   {
+      $("#"+currentMsg).fadeOut();
+      currentMsg = null;
+
+      if (gameOver)
+      {
+         resetGame();
+      }
    }
 }
 
 function handleKeyDown(event) 
 {
-    if (event.keyCode === 80) //p
-    {
-       paused = !paused;
-    }
+   if (event.keyCode === 80) //p
+   {
+      paused = !paused;
+   }
 }
 
 function createGlBuffer(values, itemSize, numItems, type)
@@ -334,16 +360,13 @@ function initBuffers()
     });
 
     //--
+
+    hexBoard = new HexBoard(1.5, worldSize, 0.2);
     hexBoard.initBoard();
     hexBoard.computeMaze();
-    //left = -worldSize+hexBoard.bRes;
-    //right = -worldSize+hexBoard.hexWidth;
-    //bottom =  -worldSize + hexBoard.r; 
-    //up =  worldSize;
-
     geometry.push(
     {
-       vertexBuffer :  createGlBuffer(hexBoard.vertices, 3, hexBoard.vertices.length/3, gl.STATIC_DRAW),
+       vertexBuffer :  createGlBuffer(hexBoard.vertices, 3, hexBoard.vertices.length/3, gl.DYNAMIC_DRAW),
        colorBuffer :   createGlBuffer(hexBoard.colors, 4, hexBoard.colors.length/4, gl.DYNAMIC_DRAW),
        textureBuffer : createGlBuffer(hexBoard.uvs, 2, hexBoard.uvs.length/2, gl.STATIC_DRAW),
        vertexDynamic : null,
@@ -474,11 +497,11 @@ function initBuffers()
     var deltaAngle = 4*Math.PI/slices;
     for (var i = 0; i < slices; i++)
     {
-       var x1 = 2*Math.cos(deltaAngle*i);
-       var y1 = 2*Math.sin(deltaAngle*i);
+       var x1 = 3.5*Math.cos(deltaAngle*i);
+       var y1 = 3.5*Math.sin(deltaAngle*i);
 
-       var x2 = 2*Math.cos(deltaAngle*(i+1));
-       var y2 = 2*Math.sin(deltaAngle*(i+1));
+       var x2 = 3.5*Math.cos(deltaAngle*(i+1));
+       var y2 = 3.5*Math.sin(deltaAngle*(i+1));
 
        vertices.push(0);
        vertices.push(0);
@@ -542,9 +565,9 @@ function initBuffers()
     texs = [];
     for (var i = 0; i < vertices.length; i+=3)
     {
-       colors.push(0.0);
-       colors.push(0.0);
-       colors.push(0.0);
+       colors.push(1.0);
+       colors.push(1.0);
+       colors.push(1.0);
        colors.push(1.0);
 
        texs.push(0.0);
@@ -563,112 +586,190 @@ function initBuffers()
     });
 }
 
-function initObjects(gameState)
-{      
-    objects = [];
-
-    // -- background objects
+function initBloodSpot(cellId, pos, scale)
+{
+    var npc = new Item(CAVE.BLOOD, 10.0); 
+    npc.placeInHex(cellId);
+    npc.translate.x += pos[0];
+    npc.translate.y += pos[1];
+    npc.translate.z += pos[2];
     objects.push(
-    {    
-       geometry: GEOMETRY.HEX,
-       translate : hexBoard.gridPos,
-       rotate : null,
-       scale : null,
-       shader : shaderNoise,
-       texture: backgroundTex,
-       enabled: true
+    {
+       geometry: GEOMETRY.BLOOD,
+       goId : gos.length,
+       shader : shaderTex,
+       texture: backgroundTex
     });
+    npc.scale = scale;
+    return npc;
+}
 
-    //--- game objects
-    var idx = hexBoard.findEmpty(); // todo: allow blood and other things in same cell?
+function placeWampus()
+{
+    var idx = hexBoard.findEmpty(); // don't allow blood and other things in same cell
     hexBoard.setHexType(idx, CAVE.BEAST);   
     var bloodcells = hexBoard.getNeighbors(idx);
     for (var i = 0; i < bloodcells.length; i++)
     {
         hexBoard.setHexType(bloodcells[i], CAVE.BLOOD);
-        var npc = new NPC(-1); // infinite
-        npc.placeInHex(bloodcells[i]);
-        objects.push(
-        {
-           geometry: GEOMETRY.BLOOD,
-           translate : npc.translate,
-           rotate : npc.rotate,
-           scale : npc.scale,
-           shader : shaderTex,
-           texture: backgroundTex,
-           enabled: false
-        });
+        var npc = initBloodSpot(bloodcells[i], [0,0,0.0], 0.25);
+        gos.push(npc); 
+    }
 
-        npcs.push(npc); 
+    // get neighbors of neighbors (2 away)
+    for (var i = 0; i < bloodcells.length; i++)
+    {
+        var neighbors2 = hexBoard.getNeighbors(bloodcells[i]);
+        for (var j = 0; j < neighbors2.length; j++)
+        {
+            if (hexBoard.getHexType(neighbors2[j]) === CAVE.EMPTY)
+            {
+                hexBoard.setHexType(neighbors2[j], CAVE.BLOOD);
+                var npc = initBloodSpot(neighbors2[j], [0,0,0.0], 0.15);
+                gos.push(npc); 
+            }
+        }
+    }
+
+    /*
+    // get 3 away neighbors
+    for (var i = 0; i < bloodcells.length; i++)
+    {
+        var neighbors2 = hexBoard.getNeighbors(bloodcells[i]);
+        for (var j = 0; j < neighbors2.length; j++)
+        {
+            var neighbors3 = hexBoard.getNeighbors(neighbors2[j]);
+            for (var k = 0; k < neighbors3.length; k++)
+            {
+                if (hexBoard.getHexType(neighbors3[k]) === CAVE.EMPTY)
+                {
+                    hexBoard.setHexType(neighbors3[k], CAVE.BLOOD);
+                    var npc = initBloodSpot(neighbors3[k], [0,0,0.0], 0.05);
+                    gos.push(npc); 
+                }
+            }
+        }
+    }*/
+
+}
+
+function initObjects(gameState)
+{      
+    objects = []; // links graphics objects to game object
+    gos = [];
+
+    // -- background game objects
+    objects.push(
+    {
+        geometry: GEOMETRY.HEX,
+        goId : gos.length,
+        shader : shaderNoise,
+        texture: backgroundTex
+    });
+    var background = new GameObject();
+    background.translate = hexBoard.gridPos;
+    gos.push(background);
+
+    //--- NPC game objects and item pickups
+    for (var i = 0; i < gameState.numWampus; i++)
+    {
+        placeWampus();
     }
 
     gameState.items.forEach(function(item)
     {
        for (var j = 0; j < item.num; j++)
        {
-          var npc = new Item(item.type, item.respawnTime); 
+          var npc = null;
+          if (item.type === CAVE.SPAWN)
+          {
+             npc = new Spawn(item.type);
+          }
+          else
+          {
+             npc = new NPC(item.type);
+          }
           var idx = hexBoard.findEmpty();
           npc.placeInHex(idx);
           hexBoard.setHexType(idx,item.type);
 
+          if (item.type === CAVE.ORB)
+          {
+             gameState.exitIdx = idx;
+          }
+
           objects.push(
           {
              geometry: item.geom,
-             translate : npc.translate,
-             rotate : npc.rotate,
-             scale : npc.scale,
+             goId : gos.length,
              shader : shaderTex,
-             texture: backgroundTex,
-             enabled: false
+             texture: backgroundTex
           });
 
-          npcs.push(npc); 
+          gos.push(npc); 
        }
     });
 
 
     // monster teeth
-    upperTeeth = new Teeth(CAVE.TEETH, 0);
-    lowerTeeth = new Teeth(CAVE.TEETH, 0);
+    upperTeeth = new Teeth(CAVE.TEETH);
     objects.push(
     {    
        geometry: GEOMETRY.QUAD,
-       translate : upperTeeth.translate,
-       rotate : upperTeeth.rotate,
-       scale : upperTeeth.scale,
+       goId: gos.length,
        shader : shaderTex,
-       texture: teethTex,
-       enabled: false
+       texture: teethTex
     });    
+    gos.push(upperTeeth); 
+
+    lowerTeeth = new Teeth(CAVE.TEETH);
     objects.push(
     {    
        geometry: GEOMETRY.QUAD,
-       translate : lowerTeeth.translate,
-       rotate : lowerTeeth.rotate,
-       scale : lowerTeeth.scale,
+       goId: gos.length,
        shader : shaderTex,
-       texture: teethTex,
-       enabled: false
+       texture: teethTex
     });    
-    npcs.push(upperTeeth); 
-    npcs.push(lowerTeeth);     
+    gos.push(lowerTeeth);     
 
     //-- player object
     var idx = hexBoard.findEmpty();
+    // check that start has a solution!
+    var count = 0;
+    var path = hexBoard.computePath(idx, gameState.exitIdx, false);
+    while (path.length === 0 && count < hexBoard.numHex) 
+    {
+        idx = (idx + 1) % hexBoard.numHex;
+        path = hexBoard.computePath(idx, gameState.exitIdx, false);
+        count = count + 1;
+    }
+    if (count === hexBoard.numHex)
+    {
+        console.log("Could not place player!");
+        showMessage("slain"); // should be "you win"
+    }
     player.placeInHex(idx);    
     player.init();
     objects.push(
     {
        geometry: GEOMETRY.TRI,
-       translate : player.translate,
-       rotate : player.rotate,
-       scale : player.scale,
+       goId: gos.length,
        shader : shaderSolid,
-       texture: backgroundTex,
-       enabled: true
+       texture: backgroundTex
     });
-}
+    gos.push(player);
 
+    /*
+    objects.push(
+    {
+       geometry: GEOMETRY.STAR,
+       goId: gos.length,
+       shader: shaderSolid,
+       texture: backgroundTex
+    });
+    gos.push(player.bullet);
+    */
+}
 
 function drawScene() 
 {
@@ -680,13 +781,14 @@ function drawScene()
 
     objects.forEach(function(obj) 
     {
-       if (obj.enabled)
+       var go = gos[obj.goId]; // game object
+       if (go.enabled)
        {
           mvPushMatrix();
          
-          if (obj.translate) mat4.translate(mvMatrix, [obj.translate.x, obj.translate.y, obj.translate.z]);
-          if (obj.rotate) mat4.rotate(mvMatrix, obj.rotate.r, [0, 0, 1]);
-          if (obj.scale) mat4.scale(mvMatrix, [obj.scale.s, obj.scale.s, obj.scale.s]);
+          mat4.translate(mvMatrix, [go.translate.x, go.translate.y, go.translate.z]);
+          mat4.rotate(mvMatrix, go.rotate, [0, 0, 1]);
+          mat4.scale(mvMatrix, [go.scale, go.scale, go.scale]);
     
           var g = geometry[obj.geometry];
     
@@ -717,16 +819,65 @@ function drawScene()
     });
 }
 
-function endGame()
+
+function resetGame()
+{
+    paused = true;
+    showMessage('title');
+    nextCave();
+    numCaves = 0;
+    gameOver = false;
+}
+
+function nextCave()
+{
+    initTexture();
+    hexBoard.resetBoard();
+    hexBoard.computeMaze();
+    initObjects(gameState);
+
+    // ASN DEBUGGING -- show generated game
+    /*
+     hexBoard.showBoard();
+     gos.forEach(function(go) 
+     {
+        if (go.type !== CAVE.TEETH) 
+        {
+        go.enabled = true;
+        }
+     });
+*/
+    numCaves = numCaves + 1;
+}
+
+function badBullet()
+{
+   showMessage('eatenBullet');
+   loseGame();
+}
+
+function enterBeastCavern()
+{
+   showMessage('eatenCavern');
+   loseGame();
+}
+
+function loseGame()
 {
    gameOver = true;
-   player.active = false;
-   for (var i = 0; i < npcs.length; i++)
+   for (var i = 1; i < gos.length; i++)
    {
-      npcs[i].active = false;
+      gos[i].enabled = false;
    }   
-   upperTeeth.start({x:0.0,y:20.0}, Math.PI, {x:0.0,y:-10.0});
-   lowerTeeth.start({x:0.0,y:-20.0}, Math.PI*2, {x:0.0,y:10.0});   
+   upperTeeth.start({x:0.0,y:worldSize*2}, Math.PI, {x:0.0,y:-10.0});
+   lowerTeeth.start({x:0.0,y:-worldSize*2}, Math.PI*2, {x:0.0,y:10.0});   
+}
+
+function winGame()
+{
+   gameOver = true;
+   showMessage('escape');
+   paused = true;
 }
 
 function animate() 
@@ -736,40 +887,60 @@ function animate()
    {
       var dt = timeNow - lastTime;
       time += dt * 0.00005;
-      player.update(dt);
-      for (var i = 0; i < npcs.length; i++)
+      for (var i = 0; i < gos.length; i++)
       {
-         npcs[i].update(dt);
+         gos[i].update(dt);
       }
+
    }
    lastTime = timeNow;
 }
 
 function updateGame()
 {
-   
-   for (var i = 0; i < npcs.length; i++)
+   if (!gameOver)
    {
-      objects[i+1].enabled = npcs[i].active;
+      if (player.isDead())
+      {
+         console.log("player is dead");
+         if (player.getDeathCause() === DEAD.NOISE)
+         {
+            badBullet();
+         }
+         else if (player.getDeathCause() === DEAD.BEAST)
+         {
+            enterBeastCavern();
+         }
+      }
+      else if (player.isVictor())
+      {
+          gameState.numWampus = Math.min(gameState.numWampus + 1, gameState.maxWampus);
+          winGame();
+      }
+      else if (player.twoAway() && !gameState.showDanger2)
+      {
+          showMessage('danger2');
+          gameState.showDanger2 = true;
+      }
+      else if (player.oneAway() && !gameState.showDanger1)
+      {
+          showMessage('danger1');
+          gameState.showDanger1 = true;
+      }
    }
 }
 
 function lookupNPC(idx)
 {
-   for (var i = 0; i < npcs.length; i++)
+   for (var i = 0; i < gos.length; i++)
    {
-      if (npcs[i].currentHex === idx) return npcs[i];
+      if (gos[i].isNPC && gos[i].currentHex === idx) return gos[i];
    }
    return null;
 }
 
 function updateHUD()
 {
-   for (var i = 0; i < 6; i++)
-   {
-      if (i < player.health) $("#HB"+i).css('background','red');
-      else $("#HB"+i).css('background','black');
-   }
 }
 
 function tick() 
@@ -781,6 +952,22 @@ function tick()
     updateHUD();
 }
 
+function showMessage(name)
+{
+   if (currentMsg !== null) return;
+   currentMsg = name;
+
+   var canvas = document.getElementById("game-canvas");
+   var canvasRect = canvas.getBoundingClientRect();
+   var image = document.getElementById(name+"Img");
+
+   var msgScreen = document.getElementById(name);
+   msgScreen.style.left = (canvasRect.left+canvas.width*0.5-image.naturalWidth*0.5)+'px';
+   msgScreen.style.top = '100px';
+   msgScreen.style.opacity = 1.0;
+   msgScreen.style.display = "inline";
+}
+
 function webGLStart() 
 {
     var canvas = document.getElementById("game-canvas");
@@ -790,7 +977,7 @@ function webGLStart()
     loadTextures();
 
     gameState = new GameState();
-    initObjects(gameState);
+    nextCave();
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); 
@@ -801,11 +988,8 @@ function webGLStart()
     document.onmousemove = handleMouseMove;
     document.onmousedown = handleMouseDown;
 
-    var canvasRect = canvas.getBoundingClientRect();
-    titleScreen = document.getElementById("title");
-    titleScreen.style.left = (canvasRect.left+canvas.width*0.5-407*0.5)+'px';
-    titleScreen.style.top = '100px';
-
+    showMessage('title');
+    sound = new Sound();
     tick();
 }
 

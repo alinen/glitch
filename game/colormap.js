@@ -1021,4 +1021,4 @@ colormaps.set("colorcube", colorcube);
 colormaps.set("prism", prism);
 
 colormapList = ["matlab", "jet", "hsv", "hot", "cool", "spring", "summer", "autumn", 
-             "winter", "bone", "copper", "pink", "lines", "colorcube", "prism"];
+             "winter", "pink", "lines", "colorcube", "prism"];

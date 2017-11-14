@@ -5,14 +5,17 @@
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 <link rel="stylesheet" href="glitch.css">
 <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
+<script type="text/javascript" src="soundjs-0.6.2.min.js"></script>
 <script type="text/javascript" src="webgl-utils.js"></script>
 <script type="text/javascript" src="colormap.js" ></script>
 <script type="text/javascript" src="imagemods.js" ></script>
 <script type="text/javascript" src="hexBoard.js" ></script>
 <script type="text/javascript" src="gameState.js" ></script>
+<script type="text/javascript" src="gameObject.js" ></script>
 <script type="text/javascript" src="movingObject.js" ></script>
 <script type="text/javascript" src="player.js" ></script>
 <script type="text/javascript" src="npcs.js" ></script>
+<script type="text/javascript" src="sound.js" ></script>
 <script type="text/javascript" src="glitzscape.js"></script>
 <script type="text/javascript" src="jquery.min.js"></script>
 <script id="shader-fs" type="text/javascript" src="glitzscape-fs.js"></script>
@@ -21,16 +24,16 @@
 
 <body onload="webGLStart();">
     <div class="container" align="center">
-         <div class="health">
-            <div class="healthbar" id="HB0" style="left: 5px;"></div>
-            <div class="healthbar" id="HB1" style="left: 30px;"></div>
-            <div class="healthbar" id="HB2" style="left: 55px;"></div>
-            <div class="healthbar" id="HB3" style="left: 80px;"></div>
-            <div class="healthbar" id="HB4" style="left: 105px;"></div>
-            <div class="healthbar" id="HB5" style="left: 130px;"></div>
-         </div>
-      <canvas id="game-canvas" width="500" height="500"></canvas>
-      <div id="title" class="message"><img src="title.png"/></div>
+      <canvas id="game-canvas" width="700" height="700"></canvas>
+      <div id="title" class="message" style="opacity:0.0"><img id="titleImg" src="title.png"/></div>
+      <div id="escape" class="message" style="opacity:0.0"><img id="escapeImg" src="escape.png"/></div>
+      <div id="eatenCavern" class="message" style="opacity:0.0"><img id="eatenCavernImg" src="eatenCavern.png"/></div>
+      <div id="eatenBullet" class="message" style="opacity:0.0"><img id="eatenBulletImg" src="eatenBullet.png"/></div>
+      <div id="spawn" class="message" style="opacity:0.0"><img id="spawnImg" src="spawn.png"/></div>
+      <div id="danger1" class="message" style="opacity:0.0"><img id="danger1Img" src="danger1.png"/></div>
+      <div id="danger2" class="message" style="opacity:0.0"><img id="danger2Img" src="danger2.png"/></div>
+      <div id="slain" class="message" style="opacity:0.0"><img id="slainImg" src="beastSlain.png"/></div>
+      </div>
     </div>
 </body>
 

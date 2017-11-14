@@ -2,13 +2,13 @@ class NPC extends MovingObject
 {
    constructor(type, respawnTime)
    {
-      super(type);
-
+      super();
       this.spawnIdx = -1;
-      this.respawnTime = respawnTime;
-      this.active = false;
-      this.scale.s = 0.4;
+      this.enabled = false;
+      this.scale = 0.25;
       this.timer = -1;
+      this.isNPC = true;
+      this.type = type;
    }
 
    placeInHex(idx)
@@ -24,7 +24,12 @@ class NPC extends MovingObject
 
    reactTo(player)
    {
-      this.active = true;
+      this.enabled = true;
+   }
+
+   kill() // no more respawns, not for a long long time
+   {
+      this.enabled = false;
    }
 }
 
@@ -32,17 +37,18 @@ class Item extends NPC
 {
    constructor(type, respawnTime)
    {
-      super(type, respawnTime);
+      super(type);
+      this.respawnTime = respawnTime
    }
    
    reactTo(player)
    {
-      if (this.active)
+      if (this.enabled)
       {
-         this.active = false;
+         this.enabled = false;
          this.timer = this.respawnTime;
       }
-      else if (this.timer < 0)
+      else if (this.timer < 0) // first contact
       {
          super.reactTo(player);
       }
@@ -56,7 +62,7 @@ class Item extends NPC
          this.timer -= dt * 0.001;
          if (this.timer < 0)
          {
-            this.active = true;
+            this.enabled = true;
          }
       }
    }
@@ -64,14 +70,13 @@ class Item extends NPC
 
 class Teeth extends NPC
 {
-   constructor(type, respawnTime)
+   constructor(type)
    {
-      super(type, respawnTime);
-      this.scale.s = 10.0;
+      super(type);
+      this.scale = 1.0;
       this.speed = 0.0005;
       this.targetDist = 0;
-      this.startpos = {x:0,y:0};
-      this.translate.z = -5.0;
+      this.startpos = {x:worldSize*2,y:0};
    }
    
    start(startpos, startrot, vel)
@@ -80,20 +85,23 @@ class Teeth extends NPC
       this.startpos = startpos;
       this.pos.x = startpos.x;
       this.pos.y = startpos.y;
-      this.rotate.r = startrot;
-      this.active = true;
-      this.startpos = startpos;
+      this.rotate = startrot;
+      this.scale = worldSize;
+      this.translate.x = startpos.x;
+      this.translate.y = startpos.y;
+      this.translate.z = -5.0;
+      this.enabled = true;
    }
 
    update(dt)
    {
       super.update(dt);
 
-      if (this.active)
+      if (this.enabled)
       {
         // console.log(this.translate.x+" "+this.translate.y+" "+this.dir.y+" "+this.pos.y);
-         if ((this.startpos.y < 0 && this.pos.y > -10) ||
-             (this.startpos.y > 0 && this.pos.y < 10))
+         if ((this.startpos.y < 0 && this.pos.y > -worldSize) ||
+             (this.startpos.y > 0 && this.pos.y < worldSize))
          {
             this.dir.x = 0;
             this.dir.y = 0;
@@ -104,37 +112,30 @@ class Teeth extends NPC
 
 class Spawn extends NPC
 {
-   constructor(type, respawnTime)
+   constructor(type)
    {
-      super(type, respawnTime);
+      super(type);
       this.speed = 0.001;
-      this.scale.s = 0.35;      
    }
 
-   reactTo(player)
+   _reachedTarget(idx)
    {
-      if (this.active)
-      {
-         //this.active = false;
-         //this.timer = this.respawnTime;
-      }
-      else if (this.timer < 0)
-      {
-         super.reactTo(player);
-         this.timer = 2;
-      }      
+      this.timer = 10; 
+      hexBoard.setHexType(idx,this.type);
    }   
 
    update(dt)
    {
       super.update(dt);
-      this.timer -= dt * 0.001;
-      if (!this.isMoving() && this.active && this.timer < 0)
+      if (this.enabled)
       {
-         var moves = hexBoard.getMoves(this.currentHex);
-         var diceRoll = Math.floor(Math.random() * moves.length);
-         var next = moves[diceRoll];         
-         this.attemptMove(next);
+         this.timer -= dt * 0.001;
+         if (!this.isMoving() && this.timer < 0)
+         {         
+            var nextHex = Math.floor(Math.random() *  hexBoard.numHex);
+            var path = hexBoard.computePath(this.currentHex, nextHex, false, false);
+            this.followPath(path);
+         }
       }
    }
 };
